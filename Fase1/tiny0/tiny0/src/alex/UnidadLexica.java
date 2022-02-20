@@ -1,4 +1,4 @@
-package jflex;
+package alex;
 
 public abstract class UnidadLexica {
    private ClaseLexica clase;
