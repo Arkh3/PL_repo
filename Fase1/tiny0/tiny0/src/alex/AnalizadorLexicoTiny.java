@@ -21,7 +21,7 @@ public class AnalizadorLexicoTiny {
     REC_PARABIERTO, REC_PARCERRADO,
     REC_SUMA, REC_INT, REC_RESTA, REC_REAL, REC_EOF,
     REC_I_DIFERENTE, REC_DIFERENTE,
-    REC_0, REC_I_REAL1, REC_I_REAL2, REC_I_REAL3, REC_REAL2,REC_REAL3
+    REC_0, REC_I_REAL1, REC_I_REAL2, REC_I_REAL3, REC_REAL2,REC_REAL3, REC_I_REAL4,REC_REAL4
    }
 
    private Estado estado;
@@ -40,7 +40,7 @@ public class AnalizadorLexicoTiny {
      columnaInicio = columnaActual;
      lex.delete(0,lex.length());
      while(true) {
-         switch(estado) { // TODO mira los error()
+         switch(estado) {
            case INI:
         	  if (hayExclamacion()) transita(Estado.REC_I_DIFERENTE);
         	  else if (hayMayor()) transita(Estado.REC_MAYOR);
@@ -58,9 +58,8 @@ public class AnalizadorLexicoTiny {
         	  else if(hayDigitoPos()) transita(Estado.REC_INT);
         	  else if (hayResta()) transita(Estado.REC_RESTA);
         	  else if (haySuma()) transita(Estado.REC_SUMA);
-              else if (haySep()) transitaIgnorando(Estado.REC_SEPARADOR);
+              else if (haySep()) transitaIgnorando(Estado.INI);
               else error();
-              //TODO falta hacer la parte de los numeros.
               break;
               
            case REC_I_DIFERENTE:
@@ -107,7 +106,7 @@ public class AnalizadorLexicoTiny {
         	   if (hayPunto()) transita(Estado.REC_I_REAL1);
         	   else return unidadInt();
         	   break;
-           case REC_INT: 
+           case REC_INT:
         	   if(hayDigito()) transita(Estado.REC_INT);
         	   else if (hayPunto()) transita(Estado.REC_I_REAL1);
         	   else if (hayE()) transita(Estado.REC_I_REAL2);
@@ -124,16 +123,26 @@ public class AnalizadorLexicoTiny {
         	   else return unidadMenos();
         	   break;
            case REC_I_REAL1:
-        	   if(hayCero()) transita(Estado.REC_I_REAL1);
+        	   if(hayCero()) transita(Estado.REC_REAL4);
         	   else if (hayDigitoPos()) transita(Estado.REC_REAL);
         	   else error();
                break;
            case REC_REAL:
         	   if(hayE()) transita(Estado.REC_I_REAL2);
-        	   else if(hayCero()) transita(Estado.REC_I_REAL1);
+        	   else if(hayCero()) transita(Estado.REC_I_REAL4);
         	   else if (hayDigitoPos()) transita(Estado.REC_REAL);
         	   else return unidadReal();
                break;
+           case REC_I_REAL4:
+        	   if(hayCero()) transita(Estado.REC_I_REAL4);
+        	   else if (hayDigitoPos()) transita(Estado.REC_REAL);
+        	   else error();
+        	   break;
+           case REC_REAL4:
+        	   if(hayCero()) transita(Estado.REC_I_REAL4);
+        	   else if (hayDigitoPos()) transita(Estado.REC_REAL);
+        	   else return unidadReal();
+        	   break;
            case REC_I_REAL2:
         	   if(hayCero()) transita(Estado.REC_REAL2);
         	   else if (hayDigitoPos()) transita(Estado.REC_REAL3);
@@ -205,7 +214,6 @@ public class AnalizadorLexicoTiny {
    private boolean hayDigito() {return hayDigitoPos() || hayCero();}
    private boolean hayPunto() {return sigCar == '.';}
    private boolean haySep() {return sigCar == ' ' || sigCar == '\t' || sigCar=='\n';}
-   //private boolean hayNL() {return sigCar == '\r' || sigCar == '\b' || sigCar == '\n';} TODO
    private boolean hayEOF() {return sigCar == -1;}
    
    private UnidadLexica unidadDiferent() {
@@ -229,12 +237,24 @@ public class AnalizadorLexicoTiny {
    private UnidadLexica unidadIgual() {
 	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.IGUAL);     
    }    
-   private UnidadLexica unidadId() { // TODO hacer palabras reservadas
+   private UnidadLexica unidadId() {
 	   switch(lex.toString()) {
-	   case "true":  
+	   case "real":  
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.REAL);
+	   case "int":    
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.INT);
+	   case "bool":    
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOL);
+	   case "true":    
 		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOLEAN);
 	   case "false":    
 		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOLEAN);
+	   case "and":    
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.AND);
+	   case "or":    
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.OR);
+	   case "not":    
+		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.NOT);
 	   default:    
 		   return new UnidadLexicaMultivaluada(filaInicio,columnaInicio,ClaseLexica.IDENTIFICADOR,lex.toString());     
 	   }
@@ -280,7 +300,9 @@ public class AnalizadorLexicoTiny {
    }
 
    public static void main(String arg[]) throws IOException {
-     Reader input = new InputStreamReader(new FileInputStream("input.txt"));
+	 System.out.println(System.getProperty("user.dir"));
+	 String direc = System.getProperty("user.dir");
+     Reader input = new InputStreamReader(new FileInputStream(direc + "\\src\\alex\\input.txt"));
      AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);
      UnidadLexica unidad;
      do {
