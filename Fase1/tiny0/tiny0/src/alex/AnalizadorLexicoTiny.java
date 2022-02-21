@@ -2,6 +2,7 @@ package alex;
 
 import java.io.FileInputStream;
 import java.io.Reader;
+
 import java.io.InputStreamReader;
 import java.io.IOException;
 
@@ -49,7 +50,7 @@ public class AnalizadorLexicoTiny {
         	  else if(hayLetra())  transita(Estado.REC_ID);
         	  else if (hayMul()) transita(Estado.REC_MULT);
         	  else if (hayDiv()) transita(Estado.REC_DIV);
-        	  else if(hayAmpersant()) transita(Estado.REC_I_SEPARADOR);
+        	  else if(hayAmpersand()) transita(Estado.REC_I_SEPARADOR);
         	  else if (hayEOF()) transita(Estado.REC_EOF);
         	  else if (hayPuntoComa()) transita(Estado.REC_PUNTOCOMA);
         	  else if (hayPAp()) transita(Estado.REC_PARABIERTO);
@@ -93,7 +94,7 @@ public class AnalizadorLexicoTiny {
            case REC_MULT: return unidadPor();
            case REC_DIV: return unidadDiv();
            case REC_I_SEPARADOR: 
-        	   if(hayAmpersant()) transita(Estado.REC_SEPARADOR);
+        	   if(hayAmpersand()) transita(Estado.REC_SEPARADOR);
         	   else error();
         	   break;
            case REC_SEPARADOR: 
@@ -102,8 +103,9 @@ public class AnalizadorLexicoTiny {
            case REC_PUNTOCOMA: return unidadPuntoComa();
            case REC_PARABIERTO: return unidadPAp();
            case REC_PARCERRADO: return unidadPCierre();
-           case REC_0: //TODO preguntar el exponente en el 0E10
+           case REC_0:
         	   if (hayPunto()) transita(Estado.REC_I_REAL1);
+        	   else if(hayE()) transita(Estado.REC_I_REAL2);
         	   else return unidadInt();
         	   break;
            case REC_INT:
@@ -140,175 +142,271 @@ public class AnalizadorLexicoTiny {
         	   break;
            case REC_REAL4:
         	   if(hayCero()) transita(Estado.REC_I_REAL4);
-        	   else if (hayDigitoPos()) transita(Estado.REC_REAL);
-        	   else return unidadReal();
-        	   break;
-           case REC_I_REAL2:
-        	   if(hayCero()) transita(Estado.REC_REAL2);
-        	   else if (hayDigitoPos()) transita(Estado.REC_REAL3);
-        	   else if(haySuma() || hayResta()) transita(Estado.REC_I_REAL3);
-        	   else error();
-        	   break;
-           case REC_I_REAL3:
-        	   if(hayCero()) transita(Estado.REC_REAL2);
-        	   else if (hayDigitoPos()) transita(Estado.REC_REAL3);
-        	   else error();
-        	   break;
-           case REC_REAL2:return unidadReal();
-           case REC_REAL3:
-        	   if(hayDigito()) transita(Estado.REC_REAL3);
-        	   else return unidadReal();
-        	   break;
-         }
-     }    
-   }
-   private void transita(Estado sig) throws IOException {
-     lex.append((char)sigCar);
-     sigCar();         
-     estado = sig;
-   }
-   private void transitaIgnorando(Estado sig) throws IOException {
-     sigCar();         
-     filaInicio = filaActual;
-     columnaInicio = columnaActual;
-     estado = sig;
-   }
-   private void sigCar() throws IOException {
-     sigCar = input.read();
-     if (sigCar == NL.charAt(0)) saltaFinDeLinea();
-     if (sigCar == '\n') {
-        filaActual++;
-        columnaActual=0;
-     }
-     else {
-       columnaActual++;  
-     }
-   }
-   private void saltaFinDeLinea() throws IOException {
-      for (int i=1; i < NL.length(); i++) {
-          sigCar = input.read();
-          if (sigCar != NL.charAt(i)) error();
-      }
-      sigCar = '\n';
-   }
-   
-   private boolean hayExclamacion() {return sigCar == '!';}
-   private boolean hayMayor() {return sigCar == '>';}
-   private boolean hayMenor() {return sigCar == '<';}
-   private boolean hayIgual() {return sigCar == '=';}   
-   private boolean hayLetra() {return sigCar >= 'a' && sigCar <= 'z' ||
-		   sigCar >= 'A' && sigCar <= 'z';}
-   private boolean hayUnderscore() {return sigCar == '_';}
-   private boolean hayMul() {return sigCar == '*';}
-   private boolean hayDiv() {return sigCar == '/';}
-   private boolean hayAmpersant() {return sigCar == '&';}
-   private boolean hayPuntoComa() {return sigCar == ';';}
-   private boolean hayPAp() {return sigCar == '(';}
-   private boolean hayPCierre() {return sigCar == ')';}
-   private boolean hayCero() {return sigCar == '0';}
-   private boolean haySuma() {return sigCar == '+';}
-   private boolean hayResta() {return sigCar == '-';}
-   private boolean hayE() {return sigCar == 'e' || sigCar == 'E';}
-   
-   private boolean hayDigitoPos() {return sigCar >= '1' && sigCar <= '9';}
-   private boolean hayDigito() {return hayDigitoPos() || hayCero();}
-   private boolean hayPunto() {return sigCar == '.';}
-   private boolean haySep() {return sigCar == ' ' || sigCar == '\t' || sigCar=='\n';}
-   private boolean hayEOF() {return sigCar == -1;}
-   
-   private UnidadLexica unidadDiferent() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.DIFERENTE);
-   }
-   private UnidadLexica unidadMayor() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.MAYOR);
-   }
-   private UnidadLexica unidadMayorIgual() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.MAYORIGUAL);
-   }
-   private UnidadLexica unidadMenor() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.MENOR);
-   }
-   private UnidadLexica unidadMenorIgual() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.MENORIGUAL);
-   }
-   private UnidadLexica unidadAsignacion() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.ASIGNACION);
-   }
-   private UnidadLexica unidadIgual() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.IGUAL);     
-   }    
-   private UnidadLexica unidadId() {
-	   switch(lex.toString()) {
-	   case "real":  
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.REAL);
-	   case "int":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.INT);
-	   case "bool":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOL);
-	   case "true":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOLEAN);
-	   case "false":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.BOOLEAN);
-	   case "and":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.AND);
-	   case "or":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.OR);
-	   case "not":    
-		   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.NOT);
-	   default:    
-		   return new UnidadLexicaMultivaluada(filaInicio,columnaInicio,ClaseLexica.IDENTIFICADOR,lex.toString());     
-	   }
-   } 
-   private UnidadLexica unidadPor() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.MULT);     
-   }    
-   private UnidadLexica unidadDiv() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.DIV);  
-   }
-   private UnidadLexica unidadSeparador() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.SEPARADOR);
-   } 
-   private UnidadLexica unidadEof() {
-	   return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.EOF);
-   }
-   private UnidadLexica unidadPuntoComa() {
-	   
-	   return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.PUNTOCOMA);
-   }
-   private UnidadLexica unidadPAp() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.PARABIERTO);     
-   }    
-   private UnidadLexica unidadPCierre() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.PARCERRRADO);     
-   }
-   private UnidadLexica unidadInt() {
-	   return new UnidadLexicaMultivaluada(filaInicio,columnaInicio,ClaseLexica.INT,lex.toString());     
-   }    
-   private UnidadLexica unidadMas() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.SUMA);     
-   }    
-   private UnidadLexica unidadMenos() {
-	   return new UnidadLexicaUnivaluada(filaInicio,columnaInicio,ClaseLexica.RESTA);     
-   }    
-   private UnidadLexica unidadReal() {
-	   return new UnidadLexicaMultivaluada(filaInicio,columnaInicio,ClaseLexica.REAL,lex.toString());     
-   }    
-      
-   private void error() {
-     System.err.println("("+filaActual+','+columnaActual+"):Caracter inexperado");  
-     System.exit(1);
-   }
+				else if (hayDigitoPos())
+					transita(Estado.REC_REAL);
+				else if (hayE())
+					transita(Estado.REC_I_REAL2);
+				else
+					return unidadReal();
+				break;
+			case REC_I_REAL2:
+				if (hayCero())
+					transita(Estado.REC_REAL2);
+				else if (hayDigitoPos())
+					transita(Estado.REC_REAL3);
+				else if (haySuma() || hayResta())
+					transita(Estado.REC_I_REAL3);
+				else
+					error();
+				break;
+			case REC_I_REAL3:
+				if (hayCero())
+					transita(Estado.REC_REAL2);
+				else if (hayDigitoPos())
+					transita(Estado.REC_REAL3);
+				else
+					error();
+				break;
+			case REC_REAL2:
+				return unidadReal();
+			case REC_REAL3:
+				if (hayDigito())
+					transita(Estado.REC_REAL3);
+				else
+					return unidadReal();
+				break;
+			}
+		}
+	}
 
-   public static void main(String arg[]) throws IOException {
-	 System.out.println(System.getProperty("user.dir"));
-	 String direc = System.getProperty("user.dir");
-     Reader input = new InputStreamReader(new FileInputStream(direc + "\\src\\alex\\input.txt"));
-     AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);
-     UnidadLexica unidad;
-     do {
-       unidad = al.sigToken();
-       System.out.println(unidad);
-     }
-     while (unidad.clase() != ClaseLexica.EOF);
-    } 
+	private void transita(Estado sig) throws IOException {
+		lex.append((char) sigCar);
+		sigCar();
+		estado = sig;
+	}
+
+	private void transitaIgnorando(Estado sig) throws IOException {
+		sigCar();
+		filaInicio = filaActual;
+		columnaInicio = columnaActual;
+		estado = sig;
+	}
+
+	private void sigCar() throws IOException {
+		sigCar = input.read();
+		if (sigCar == NL.charAt(0))
+			saltaFinDeLinea();
+		if (sigCar == '\n') {
+			filaActual++;
+			columnaActual = 0;
+		} else {
+			columnaActual++;
+		}
+	}
+
+	private void saltaFinDeLinea() throws IOException {
+		for (int i = 1; i < NL.length(); i++) {
+			sigCar = input.read();
+			if (sigCar != NL.charAt(i))
+				error();
+		}
+		sigCar = '\n';
+	}
+
+	private boolean hayExclamacion() {
+		return sigCar == '!';
+	}
+
+	private boolean hayMayor() {
+		return sigCar == '>';
+	}
+
+	private boolean hayMenor() {
+		return sigCar == '<';
+	}
+
+	private boolean hayIgual() {
+		return sigCar == '=';
+	}
+
+	private boolean hayLetra() {
+		return sigCar >= 'a' && sigCar <= 'z' || sigCar >= 'A' && sigCar <= 'z';
+	}
+
+	private boolean hayUnderscore() {
+		return sigCar == '_';
+	}
+
+	private boolean hayMul() {
+		return sigCar == '*';
+	}
+
+	private boolean hayDiv() {
+		return sigCar == '/';
+	}
+
+	private boolean hayAmpersand() {
+		return sigCar == '&';
+	}
+
+	private boolean hayPuntoComa() {
+		return sigCar == ';';
+	}
+
+	private boolean hayPAp() {
+		return sigCar == '(';
+	}
+
+	private boolean hayPCierre() {
+		return sigCar == ')';
+	}
+
+	private boolean hayCero() {
+		return sigCar == '0';
+	}
+
+	private boolean haySuma() {
+		return sigCar == '+';
+	}
+
+	private boolean hayResta() {
+		return sigCar == '-';
+	}
+
+	private boolean hayE() {
+		return sigCar == 'e' || sigCar == 'E';
+	}
+
+	private boolean hayDigitoPos() {
+		return sigCar >= '1' && sigCar <= '9';
+	}
+
+	private boolean hayDigito() {
+		return hayDigitoPos() || hayCero();
+	}
+
+	private boolean hayPunto() {
+		return sigCar == '.';
+	}
+
+	private boolean haySep() {
+		return sigCar == ' ' || sigCar == '\t' || sigCar == '\n';
+	}
+
+	private boolean hayEOF() {
+		return sigCar == -1;
+	}
+
+	private UnidadLexica unidadDiferent() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.DIFERENTE);
+	}
+
+	private UnidadLexica unidadMayor() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.MAYOR);
+	}
+
+	private UnidadLexica unidadMayorIgual() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.MAYORIGUAL);
+	}
+
+	private UnidadLexica unidadMenor() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.MENOR);
+	}
+
+	private UnidadLexica unidadMenorIgual() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.MENORIGUAL);
+	}
+
+	private UnidadLexica unidadAsignacion() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.ASIGNACION);
+	}
+
+	private UnidadLexica unidadIgual() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.IGUAL);
+	}
+
+	private UnidadLexica unidadId() {
+		switch (lex.toString()) {
+		case "real":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.REAL);
+		case "int":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.INT);
+		case "bool":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.BOOL);
+		case "true":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.BOOLEAN);
+		case "false":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.BOOLEAN);
+		case "and":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.AND);
+		case "or":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.OR);
+		case "not":
+			return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.NOT);
+		default:
+			return new UnidadLexicaMultivaluada(filaInicio, columnaInicio, ClaseLexica.IDENTIFICADOR, lex.toString());
+		}
+	}
+
+	private UnidadLexica unidadPor() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.MULT);
+	}
+
+	private UnidadLexica unidadDiv() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.DIV);
+	}
+
+	private UnidadLexica unidadSeparador() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.SEPARADOR);
+	}
+
+	private UnidadLexica unidadEof() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.EOF);
+	}
+
+	private UnidadLexica unidadPuntoComa() {
+
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.PUNTOCOMA);
+	}
+
+	private UnidadLexica unidadPAp() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.PARABIERTO);
+	}
+
+	private UnidadLexica unidadPCierre() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.PARCERRRADO);
+	}
+
+	private UnidadLexica unidadInt() {
+		return new UnidadLexicaMultivaluada(filaInicio, columnaInicio, ClaseLexica.INT, lex.toString());
+	}
+
+	private UnidadLexica unidadMas() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.SUMA);
+	}
+
+	private UnidadLexica unidadMenos() {
+		return new UnidadLexicaUnivaluada(filaInicio, columnaInicio, ClaseLexica.RESTA);
+	}
+
+	private UnidadLexica unidadReal() {
+		return new UnidadLexicaMultivaluada(filaInicio, columnaInicio, ClaseLexica.REAL, lex.toString());
+	}
+
+	private void error() {
+		System.err.println("(" + filaActual + ',' + columnaActual + "):Caracter inexperado");
+		System.exit(1);
+	}
+
+	public static void main(String arg[]) throws IOException {
+		System.out.println(System.getProperty("user.dir"));
+		String direc = System.getProperty("user.dir");
+		Reader input = new InputStreamReader(new FileInputStream(direc + "\\src\\alex\\input.txt"));
+		AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);
+		UnidadLexica unidad;
+		do {
+			unidad = al.sigToken();
+			System.out.println(unidad);
+		} while (unidad.clase() != ClaseLexica.EOF);
+	}
 }
