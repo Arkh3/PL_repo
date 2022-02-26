@@ -4,9 +4,19 @@ bool pesado_9;
 int entero_0_;
 int Entero
 &&
-enter0_ = -10 + +10 - +0.0E-0;
+enter_0_ = -10 + +10 - +0.0E-0;
 Entero = not (12.2 != 12);
 Entero = --12;
 pesado_9 = (true and false) or not true;
 peso = (45.0 * 12e-56) / -2.05;
 pesado = (peso > 10.0) or (peso / 2 <= +0.0)
+
+Entero = 0;
+while (Entero[1] < 10) do
+	if(peso % 2 == 0) then write("Hola");
+	else then read("//dlakfjaklsdjfo2w");
+	endif
+	
+	delete Entero; # Adios
+	
+endwhile;

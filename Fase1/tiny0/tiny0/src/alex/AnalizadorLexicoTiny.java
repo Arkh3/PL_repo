@@ -399,7 +399,6 @@ public class AnalizadorLexicoTiny {
 	}
 
 	public static void main(String arg[]) throws IOException {
-		System.out.println(System.getProperty("user.dir"));
 		String direc = System.getProperty("user.dir");
 		Reader input = new InputStreamReader(new FileInputStream(direc + "\\src\\alex\\input.txt"));
 		AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);

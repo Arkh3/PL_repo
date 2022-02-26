@@ -7,14 +7,15 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 
 public class Main {
-   public static void main(String[] args) throws FileNotFoundException, IOException {
-     Reader input = new InputStreamReader(new FileInputStream("input.txt"));
-     AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);
-     UnidadLexica unidad;
-     do {
-       unidad = al.yylex();
-       System.out.println(unidad);
-     }
-     while (unidad.clase() != ClaseLexica.EOF);
-    }        
-} 
+	public static void main(String[] args) throws FileNotFoundException, IOException {
+		String direc = System.getProperty("user.dir");
+		System.out.println(direc);
+		Reader input = new InputStreamReader(new FileInputStream(direc + "\\alex\\input.txt"));
+		AnalizadorLexicoTiny al = new AnalizadorLexicoTiny(input);
+		UnidadLexica unidad;
+		do {
+			unidad = al.yylex();
+			System.out.println(unidad);
+		} while (unidad.clase() != ClaseLexica.EOF);
+	}
+}

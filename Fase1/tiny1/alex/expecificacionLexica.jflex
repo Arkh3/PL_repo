@@ -25,10 +25,9 @@ package alex;
 letra  = ([A-Z]|[a-z])
 digitoPos = [1-9]
 digito = ({digitoPos}|0)
-numEnt = [\+,\-]?{digitoPos}{digito}*
+numEnt = [\+\-]?(0|{digitoPos}{digito}*)
 parteDecimal = \.({digito}*{digitoPos}|0)
 parteExp = (e|E){numEnt}
-identificador = {letra}({letra}|{digito}|_)*
 separador = \&\&
 int = int
 real = real
@@ -84,12 +83,14 @@ nl = nl
 var = var
 type = type
 comentario = #[^\n]* 
-separador = (\t|\r|\b|\n)
-cadena = "(^\n|\r)*"
+ignorable = [ \t\r\b\n]
+cadena = \"[^\n\r\b]*\"
+identificador = {letra}({letra}|{digito}|_)*
 %%
-{numEnt} 			{return ops.unidadNumEntero();}
-{identificador} 	{return ops.unidadId();}
+{comentario}		{}
+{ignorable} 		{}
 {separador} 		{return ops.unidadSeparador();}
+{numEnt} 			{return ops.unidadNumEntero();}
 {int} 				{return ops.unidadInt();}
 {real} 				{return ops.unidadReal();}
 {bool} 				{return ops.unidadBool();}
@@ -143,7 +144,6 @@ cadena = "(^\n|\r)*"
 {nl} 				{return ops.unidadNl();}
 {var} 				{return ops.unidadVar();}
 {type} 				{return ops.unidadType();}
-{comentario}		{}
-{separador} 		{}
 {cadena} 			{return ops.unidadCadena();}
+{identificador} 	{return ops.unidadId();}
 [^]                 {ops.error();}  
