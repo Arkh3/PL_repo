@@ -47,16 +47,16 @@ public class AnalizadorLexicoTiny {
         	  else if (hayMayor()) transita(Estado.REC_MAYOR);
         	  else if (hayMenor()) transita(Estado.REC_MENOR);
         	  else if (hayIgual()) transita(Estado.REC_ASIGNACION);
-        	  else if(hayLetra())  transita(Estado.REC_ID);
+        	  else if (hayLetra())  transita(Estado.REC_ID);
         	  else if (hayMul()) transita(Estado.REC_MULT);
         	  else if (hayDiv()) transita(Estado.REC_DIV);
-        	  else if(hayAmpersand()) transita(Estado.REC_I_SEPARADOR);
+        	  else if (hayAmpersand()) transita(Estado.REC_I_SEPARADOR);
         	  else if (hayEOF()) transita(Estado.REC_EOF);
         	  else if (hayPuntoComa()) transita(Estado.REC_PUNTOCOMA);
         	  else if (hayPAp()) transita(Estado.REC_PARABIERTO);
         	  else if (hayPCierre()) transita(Estado.REC_PARCERRADO);
         	  else if (hayCero()) transita(Estado.REC_0);
-        	  else if(hayDigitoPos()) transita(Estado.REC_INT);
+        	  else if (hayDigitoPos()) transita(Estado.REC_INT);
         	  else if (hayResta()) transita(Estado.REC_RESTA);
         	  else if (haySuma()) transita(Estado.REC_SUMA);
               else if (haySep()) transitaIgnorando(Estado.INI);
@@ -230,7 +230,7 @@ public class AnalizadorLexicoTiny {
 	}
 
 	private boolean hayLetra() {
-		return sigCar >= 'a' && sigCar <= 'z' || sigCar >= 'A' && sigCar <= 'z';
+		return sigCar >= 'a' && sigCar <= 'z' || sigCar >= 'A' && sigCar <= 'Z';
 	}
 
 	private boolean hayUnderscore() {
