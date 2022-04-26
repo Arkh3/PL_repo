@@ -1,0 +1,129 @@
+options  {
+  STATIC=false;
+}  
+PARSER_BEGIN(AnalizadorSintacticoTiny)
+package asint;
+
+public class AnalizadorSintacticoTiny {}
+PARSER_END(AnalizadorSintacticoTiny)
+  TOKEN:{<#letra:["a"-"z","A"-"Z"]>}
+  TOKEN:{<#digitoPositivo:["1"-"9"]>}
+  TOKEN:{<#digito:<digitoPositivo>|"0">} 
+  TOKEN:{<#parteDecimal: "." (<digito>)* <digitoPositivo>>}
+  TOKEN:{<#parteExp: ("e" | "E") <numEnt>>}
+  SKIP:{<[" ","\r","\b","\n"]>}  
+  SKIP:{<"#"(~["\n"])*>}
+  TOKEN:{<separador:"&&">}
+  TOKEN:{<integer:"int">}
+  TOKEN:{<real:"real">}
+  TOKEN:{<bool:"bool">}
+  TOKEN:{<numEnt:(["+","-"])? (<digitoPositivo> (<digito>)* | "0")>} 
+  TOKEN:{<numReal:<numEnt> (<parteDecimal> | <parteExp> | <parteDecimal> <parteExp>)>} 
+  TOKEN:{<booleans: "true" | "false">}
+  TOKEN:{<asignacion:"=">}
+  TOKEN:{<puntocoma:";">}
+  TOKEN:{<parAbierto:"(">}
+  TOKEN:{<parCerrado:")">}
+  TOKEN:{<suma:"+">}
+  TOKEN:{<resta:"-">}
+  TOKEN:{<div:"/">}
+  TOKEN:{<mult:"*">}
+  TOKEN:{<and:"and">}
+  TOKEN:{<or:"or">}
+  TOKEN:{<not:"not">}
+  TOKEN:{<mayor:">">}
+  TOKEN:{<menor:"<">}
+  TOKEN:{<mayorIgual:">=">}
+  TOKEN:{<menorIgual:"<=">}
+  TOKEN:{<igual:"==">}
+  TOKEN:{<diferente:"!=">}
+  TOKEN:{<porcentaje:"%">}
+  TOKEN:{<corcheteAbierto:"[">}
+  TOKEN:{<corcheteCerrado:"]">}
+  TOKEN:{<llaveAbierta:"{">}
+  TOKEN:{<llaveCerrada:"}">}
+  TOKEN:{<punto:".">}
+  TOKEN:{<flecha:"->">}
+  TOKEN:{<coma:",">}
+  TOKEN:{<ampersand:"&">}
+  TOKEN:{<string:"string">}
+  TOKEN:{<tnull:"null">}
+  TOKEN:{<proc:"proc">}
+  TOKEN:{<tif:"if">}
+  TOKEN:{<then:"then">}
+  TOKEN:{<telse:"else">}
+  TOKEN:{<endif:"endif">}
+  TOKEN:{<twhile:"while">}
+  TOKEN:{<tdo:"do">}
+  TOKEN:{<endwhile:"endwhile">}
+  TOKEN:{<call:"call">}
+  TOKEN:{<record:"record">}
+  TOKEN:{<array:"array">}
+  TOKEN:{<of:"of">}
+  TOKEN:{<pointer:"pointer">}
+  TOKEN:{<tnew:"new">}
+  TOKEN:{<delete:"delete">}
+  TOKEN:{<read:"read">}
+  TOKEN:{<write:"write">}
+  TOKEN:{<nl:"nl">}
+  TOKEN:{<var:"var">}
+  TOKEN:{<type:"type">}
+  TOKEN:{<cadena:"\"" (~["\"","\r","\b","\n"])* "\"">} // falta el <EOF> 
+  TOKEN:{<identificador:<letra> (<letra> | <digito> | "_")*>}
+  
+  void Sp()       : {} {S() <EOF>}
+  void S()        : {} {SecDec() SecInstr()}
+  void SecDec() : {} {Declaraciones() <separador> | {}}
+  void Declaraciones() : {} {Declaracion() DeclaracionesAux()}
+  void DeclaracionesAux() : {} {<puntocoma> Declaracion() DeclaracionesAux() | {}}
+  void Declaracion() : {} {DeclaracionVar() | DeclaracionTipo() | DeclaracionProc()}
+  void DeclaracionVar() : {} {<var> Tipo() <identificador>}
+  void DeclaracionTipo() : {} {<type> Tipo() <identificador>}
+  void DeclaracionProc() : {} {<proc> <identificador> <parAbierto> ParametrosFormales() <parCerrado> Bloque()}
+  void ParametrosFormales(): {} {Parametro() ParametrosFormalesAux() | {}}
+  void ParametrosFormalesAux(): {} {<coma> Parametro() ParametrosFormalesAux() | {}}
+  void Parametro(): {} {Tipo() ParametroAux()}
+  void ParametroAux(): {} {<identificador> | <ampersand> <identificador>}
+  void Bloque(): {} {<llaveAbierta> SecDec() SecInstr() <llaveCerrada>}
+  void Tipo(): {} {<integer> | <real> | <bool> | <string> | <identificador> | Array() | Registro() | Puntero()}
+  void Array(): {} {<array> <corcheteAbierto> <numEnt> <corcheteCerrado> <of> Tipo()}
+  void Registro(): {} {<record> <llaveAbierta> Campos() <llaveCerrada>}
+  void Campos(): {} {Campo() CamposAux()}
+  void CamposAux(): {} {<puntocoma> Campo() CamposAux() | {}}
+  void Campo(): {} {Tipo() <identificador>}
+  void Puntero(): {} {<pointer> Tipo()}
+  void SecInstr(): {} {Instruccion() SecInstrAux()}
+  void SecInstrAux(): {} {<puntocoma> Instruccion() SecInstrAux() | {}}
+  void Instruccion(): {} {InstruccionAsignacion() | InstruccionIf() | InstruccionWhile() | InstruccionRead() | InstruccionWrite() | <nl> | InstruccionNew() | InstruccionDelete() | InstruccionCall() | Bloque()}
+  void InstruccionAsignacion(): {} {E0() <asignacion> E0()}
+  void InstruccionIf(): {} {<tif> E0() <then> SecInstr2() Else() <endif>}
+  void SecInstr2(): {} {SecInstr() | {}}
+  void Else(): {} {<telse> SecInstr2() | {}}
+  void InstruccionWhile(): {} {<twhile> E0() <tdo> SecInstr2() <endwhile>}
+  void InstruccionRead(): {} {<read> E0()}
+  void InstruccionWrite(): {} {<write> E0()}
+  void InstruccionNew(): {} {<tnew> E0()}
+  void InstruccionDelete(): {} {<delete> E0()}
+  void InstruccionCall(): {} {<call> <identificador> <parAbierto> ParametrosReales() <parCerrado>}
+  void ParametrosReales(): {} {E0() ParametrosRealesAux() | {}}
+  void ParametrosRealesAux(): {} {<coma> E0() ParametrosRealesAux() | {}}
+  void ExpresionBasica(): {} {<numEnt> | <numReal> | <identificador> | <booleans> | <cadena> | <tnull>}
+  void E0(): {} { E1() E0_AUX()}
+  void E0_AUX(): {} { <suma> E0() | <resta> E1() | {} }
+  void E1(): {} { E2() E1_AUX()}
+  void E1_AUX (): {} {Op1() E2() E1_AUX() | {}}
+  void E2(): {} {E3() E2_AUX()}
+  void E2_AUX (): {} {Op2() E3() E2_AUX() | {}}
+  void E3(): {} {E4() E3_AUX()}
+  void E3_AUX (): {} {Op3() E4() | {}}
+  void E4(): {} {<not> E4() | <resta> E5() | E5()}
+  void E5(): {} {E6() E5_AUX()}
+  void E5_AUX (): {} { Op4() E5_AUX() | {} }
+  void E6(): {} {<mult> E6() | E7()}
+  void E7(): {} { ExpresionBasica() | <parAbierto> E0() <parCerrado>}
+  void Op1(): {} {<and> | <or>}
+  void Op2(): {} { <menor> | <mayor> | <menorIgual> | <mayorIgual> | <diferente> | <igual> }
+  void Op3(): {} { <mult> | <div> | <porcentaje>}
+  void Op4(): {} { Indexacion() | Acceso_registro() }
+  void Indexacion(): {} {  <corcheteAbierto> E0() <corcheteCerrado> }
+  void Acceso_registro(): {} {<punto> <identificador> | <flecha> <identificador>}

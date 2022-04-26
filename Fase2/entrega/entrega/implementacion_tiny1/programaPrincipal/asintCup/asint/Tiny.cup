@@ -1,0 +1,88 @@
+package asint;
+
+import java_cup.runtime.*;
+import alex.AnalizadorLexicoTiny;
+import alex.UnidadLexica;
+import errors.GestionErroresTiny;
+
+scan with {: return getScanner().next_token(); :};
+parser code {: 
+   private GestionErroresTiny errores;
+   public void syntax_error(Symbol unidadLexica) {
+     errores.errorSintactico((UnidadLexica)unidadLexica);
+   }
+:};
+init with {: 
+   errores = new GestionErroresTiny();
+   AnalizadorLexicoTiny alex = (AnalizadorLexicoTiny)getScanner();
+   alex.fijaGestionErrores(errores);
+:};
+
+
+terminal    NL, OF, TYPE, PROC, SEPARADOR, PUNTOCOMA, VAR, IDENTIFICADOR,
+			PAR_ABIERTO, PAR_CERRADO, COMA, AMPERSAND, LLAVE_ABIERTA, 
+			LLAVE_CERRADA, INT, REAL, BOOL, STRING, ARRAY, RECORD, POINTER, 
+			CORCHETE_ABIERTO, CORCHETE_CERRADO, ASIGNACION, MAS, MENOS, NOT, 
+			NUM_ENT, NUM_REAL, BOOLEAN, AND, OR, MENOR, MAYOR,  MENOR_IGUAL, 
+			MAYOR_IGUAL, DIFERENTE, IGUAL, MULT, DIV, NULL, IF, ELSE, WHILE, 
+			ENDIF, ENDWHILE, DO, THEN, READ, WRITE, NEW, DELETE, CALL, 
+			PORCENTAJE, PUNTO, FLECHA , CADENA, EOF;
+
+non terminal  	SAux, S, SecDec, Declaraciones, Declaracion, DeclaracionVar,
+ 				DeclaracionTipo, DeclaracionProc, ParametrosFormales,
+ 				ParametrosFormalesAux, Parametro, Bloque, Tipo, Array, 
+ 				Registro, Campos, Campo, Puntero, SecInstr, Instruccion, 
+ 				InstruccionCall, InstruccionAsignacion, 
+ 				InstruccionIf, SecInstr2, InstruccionIfElse, InstruccionWhile, 
+ 				InstruccionRead, InstruccionWrite, InstruccionNew, 
+ 				InstruccionDelete, ParametrosReales, 
+ 				ParametrosRealesAux, ExpresionBasica, E0, E1, E2, E3, E4, 
+ 				E5, E6, E7, Op1, Op2, Op3, Op4, Indexacion, Acceso_registro;
+
+SAux ::= S EOF;
+S ::= SecDec SecInstr;
+SecDec ::= Declaraciones SEPARADOR | ;
+Declaraciones ::= Declaraciones PUNTOCOMA Declaracion | Declaracion;
+Declaracion ::= DeclaracionVar | DeclaracionTipo  | DeclaracionProc;
+DeclaracionVar ::= VAR Tipo IDENTIFICADOR;
+DeclaracionTipo ::= TYPE Tipo IDENTIFICADOR;
+DeclaracionProc ::= PROC IDENTIFICADOR PAR_ABIERTO ParametrosFormales PAR_CERRADO Bloque;
+ParametrosFormales ::= ParametrosFormalesAux | ;
+ParametrosFormalesAux ::= ParametrosFormalesAux COMA Parametro | Parametro;
+Parametro ::= Tipo IDENTIFICADOR | Tipo AMPERSAND IDENTIFICADOR;
+Bloque ::=  LLAVE_ABIERTA SecDec SecInstr LLAVE_CERRADA;
+Tipo ::= INT | REAL | BOOL | STRING | IDENTIFICADOR | Array | Registro | Puntero;
+Array ::= ARRAY CORCHETE_ABIERTO NUM_ENT CORCHETE_CERRADO OF Tipo;
+Registro ::= RECORD LLAVE_ABIERTA Campos LLAVE_CERRADA;
+Campos ::= Campos PUNTOCOMA Campo | Campo;
+Campo ::= Tipo IDENTIFICADOR;
+Puntero ::= POINTER Tipo;
+SecInstr ::= SecInstr PUNTOCOMA Instruccion | Instruccion;
+Instruccion ::= InstruccionAsignacion | InstruccionIf | InstruccionIfElse | InstruccionWhile | InstruccionRead | InstruccionWrite | NL | InstruccionNew | InstruccionDelete | InstruccionCall | Bloque;
+InstruccionAsignacion ::= E0 ASIGNACION E0; 
+InstruccionIf ::= IF E0 THEN SecInstr2 ENDIF;
+SecInstr2 ::= SecInstr | ;
+InstruccionIfElse ::= IF E0 THEN SecInstr2 ELSE SecInstr2 ENDIF;
+InstruccionWhile ::= WHILE E0 DO SecInstr2 ENDWHILE;
+InstruccionRead ::= READ E0;
+InstruccionWrite ::= WRITE E0;
+InstruccionNew ::= NEW E0;
+InstruccionDelete ::= DELETE E0;
+InstruccionCall ::= CALL IDENTIFICADOR PAR_ABIERTO ParametrosReales PAR_CERRADO;
+ParametrosReales ::= ParametrosRealesAux | ;
+ParametrosRealesAux ::= ParametrosRealesAux COMA E0| E0;
+ExpresionBasica ::= NUM_ENT| NUM_REAL | IDENTIFICADOR | BOOLEAN | CADENA | NULL;
+E0 ::= E1 MAS E0 | E1 MENOS E1| E1;
+E1 ::= E1 Op1 E2 | E2;
+E2 ::= E2 Op2 E3 | E3;
+E3 ::= E4 Op3 E4 | E4;
+E4 ::= NOT E4 | MENOS E5 | E5;
+E5 ::= E5 Op4 |  E6;
+E6 ::= MULT E6 | E7;
+E7 ::= ExpresionBasica | PAR_ABIERTO E0 PAR_CERRADO
+Op1 ::= AND | OR 
+Op2 ::= MENOR | MAYOR | MENOR_IGUAL | MAYOR_IGUAL | DIFERENTE | IGUAL;
+Op3 ::= MULT | DIV | PORCENTAJE;
+Op4 ::= Indexacion | Acceso_registro 
+Indexacion ::= CORCHETE_ABIERTO E0 CORCHETE_CERRADO
+Acceso_registro ::= PUNTO IDENTIFICADOR | FLECHA IDENTIFICADOR;
