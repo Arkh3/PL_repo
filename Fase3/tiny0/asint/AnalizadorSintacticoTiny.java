@@ -114,38 +114,28 @@ public class AnalizadorSintacticoTiny {
 	public static abstract class Tipo{
 		public Tipo() {
         }   
-		public String type() {throw new UnsupportedOperationException("decs");}
 		public abstract void procesa(Procesamiento p);
 	}	
 	
 	public static class Int extends Tipo{
-		private String type;
 		public Int() {
-			type = "int";
 		}   
-		public String type() { return type;}
         public void procesa(Procesamiento p) {
             p.procesa(this); 
         }   
 	}
 	
 	public static class Real extends Tipo{
-		private String type;
 		public Real() {
-			this.type = "real";
         }   
-		public String type() { return type;}
         public void procesa(Procesamiento p) {
             p.procesa(this); 
         }   
 	}
 		
 	public static class Bool extends Tipo{
-		private String type;
 		public Bool() {
-			this.type = "bool";
-        }  
-		public String type() { return type;}
+        }
         public void procesa(Procesamiento p) {
             p.procesa(this); 
         }   

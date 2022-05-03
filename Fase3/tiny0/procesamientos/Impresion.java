@@ -52,7 +52,8 @@ public class Impresion extends ProcesamientoPorDefecto {
        decs.dec().procesa(this);
    }
    public void procesa(Dec dec) {
-       System.out.print(dec.type().type().toString()+" "+dec.id().toString());
+	   dec.type().procesa(this);
+	   System.out.print(" "+dec.id().toString());
    }
    public void procesa(Int type) {
 	   System.out.print("int");
