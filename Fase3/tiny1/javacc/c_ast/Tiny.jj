@@ -1,0 +1,134 @@
+options  {
+	STATIC=false;
+}  
+PARSER_BEGIN(ConstrAST)
+package c_ast;
+
+import asint.AnalizadorSintacticoTiny.*;
+import asint.AnalizadorSintacticoTiny.Boolean;
+import semOps.SemOps;
+
+public class ConstrAST {
+	 private SemOps sem = new SemOps();
+}
+PARSER_END(ConstrAST)
+	TOKEN:{<#letra:["a"-"z","A"-"Z"]>}
+	TOKEN:{<#digitoPositivo:["1"-"9"]>}
+	TOKEN:{<#digito:<digitoPositivo>|"0">} 
+	TOKEN:{<#parteDecimal: "." (<digito>)* <digitoPositivo>>}
+	TOKEN:{<#parteExp: ("e" | "E") <numEnt>>}
+	SKIP:{<[" ","\r","\b","\n"]>}  
+	SKIP:{<"#"(~["\n"])*>}
+	TOKEN:{<separador:"&&">}
+	TOKEN:{<integer:"int">}
+	TOKEN:{<real:"real">}
+	TOKEN:{<bool:"bool">}
+	TOKEN:{<numEnt:(["+","-"])? (<digitoPositivo> (<digito>)* | "0")>} 
+	TOKEN:{<numReal:<numEnt> (<parteDecimal> | <parteExp> | <parteDecimal> <parteExp>)>} 
+	TOKEN:{<booleans: "true" | "false">}
+	TOKEN:{<asignacion:"=">}
+	TOKEN:{<puntocoma:";">}
+	TOKEN:{<parAbierto:"(">}
+	TOKEN:{<parCerrado:")">}
+	TOKEN:{<suma:"+">}
+	TOKEN:{<resta:"-">}
+	TOKEN:{<div:"/">}
+	TOKEN:{<mult:"*">}
+	TOKEN:{<and:"and">}
+	TOKEN:{<or:"or">}
+	TOKEN:{<not:"not">}
+	TOKEN:{<mayor:">">}
+	TOKEN:{<menor:"<">}
+	TOKEN:{<mayorIgual:">=">}
+	TOKEN:{<menorIgual:"<=">}
+	TOKEN:{<igual:"==">}
+	TOKEN:{<diferente:"!=">}
+	TOKEN:{<porcentaje:"%">}
+	TOKEN:{<corcheteAbierto:"[">}
+	TOKEN:{<corcheteCerrado:"]">}
+	TOKEN:{<llaveAbierta:"{">}
+	TOKEN:{<llaveCerrada:"}">}
+	TOKEN:{<punto:".">}
+	TOKEN:{<flecha:"->">}
+	TOKEN:{<coma:",">}
+	TOKEN:{<ampersand:"&">}
+	TOKEN:{<string:"string">}
+	TOKEN:{<tnull:"null">}
+	TOKEN:{<proc:"proc">}
+	TOKEN:{<tif:"if">}
+	TOKEN:{<then:"then">}
+	TOKEN:{<telse:"else">}
+	TOKEN:{<endif:"endif">}
+	TOKEN:{<twhile:"while">}
+	TOKEN:{<tdo:"do">}
+	TOKEN:{<endwhile:"endwhile">}
+	TOKEN:{<call:"call">}
+	TOKEN:{<record:"record">}
+	TOKEN:{<array:"array">}
+	TOKEN:{<of:"of">}
+	TOKEN:{<pointer:"pointer">}
+	TOKEN:{<tnew:"new">}
+	TOKEN:{<delete:"delete">}
+	TOKEN:{<read:"read">}
+	TOKEN:{<write:"write">}
+	TOKEN:{<nl:"nl">}
+	TOKEN:{<var:"var">}
+	TOKEN:{<type:"type">}
+	TOKEN:{<cadena:"\"" (~["\"","\r","\b","\n"])* "\"">} // falta el <EOF> 
+	TOKEN:{<identificador:<letra> (<letra> | <digito> | "_")*>}
+	
+	Prog Sp(): 											{Prog prog;} 									{prog=S() <EOF> {return prog;}}
+	Prog S(): 											{Decs decs; Instrs instrs;} 					{decs=SecDec() instrs=SecInstr() {return sem.prog(decs,instrs);}}
+	Decs SecDec(): 										{Decs decs;} 									{decs=Declaraciones() <separador> {return decs;} | {return sem.decs_vacia();}}
+	Decs Declaraciones(): 								{Decs decs; Dec dec;} 							{dec=Declaracion() decs=DeclaracionesAux(sem.decs_una(dec)) {return decs;}}
+	Decs DeclaracionesAux(Decs decsh): 					{Decs decs;Dec dec;} 							{<puntocoma> dec=Declaracion() decs=DeclaracionesAux(sem.decs_muchas(decsh, dec)) {return decs;}| {return decsh;}}
+	Dec Declaracion(): 									{Dec dec;} 										{dec=DeclaracionVar() {return dec;} | dec=DeclaracionTipo() {return dec;} | dec=DeclaracionProc() {return dec;}}
+	Dec DeclaracionVar(): 								{Tipo t; Token tok;} 							{<var> t=Tipo() tok=<identificador> {return sem.dec_var(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}}
+	Dec DeclaracionTipo(): 								{Tipo t; Token tok;} 							{<type> t=Tipo() tok=<identificador> {return sem.dec_tipo(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}}
+	Dec DeclaracionProc() : 								{Token tok; ParamsForm params; Bloque bloque;} 	{<proc> tok=<identificador> <parAbierto> params=ParametrosFormales() <parCerrado> bloque=Bloque() {return sem.dec_proc(sem.str(tok.image,tok.beginLine,tok.beginColumn), params, bloque);}}
+	ParamsForm ParametrosFormales(): 						{Param param; ParamsForm params;} 				{param=Parametro() params=ParametrosFormalesAux(sem.paramsForm_uno(param)) {return params;} | {return sem.paramsForm_vacio();}}
+	ParamsForm ParametrosFormalesAux(ParamsForm paramsh): 	{Param param; ParamsForm params;} 					{<coma> param=Parametro() params=ParametrosFormalesAux(sem.paramsForm_muchos(paramsh, param)) {return params;} | {return paramsh;}}
+	Param Parametro(): 									{Tipo t; Param param;} 							{t=Tipo() param=ParametroAux(t) {return param;}}
+	Param ParametroAux(Tipo th): 							{Token tok;} 									{tok=<identificador> {return sem.param_sin_amp(th, sem.str(tok.image,tok.beginLine,tok.beginColumn));}| <ampersand> tok=<identificador> {return sem.param_con_amp(th, sem.str(tok.image,tok.beginLine,tok.beginColumn));}}
+	Bloque Bloque(): 										{Decs decs; Instrs instrs;} 					{<llaveAbierta> decs=SecDec() instrs=SecInstr() <llaveCerrada> {return sem.bloque(decs,instrs);}}
+	Tipo Tipo(): 											{Token tok;Tipo t;} 							{<integer> {return sem.tipoInt();} | <real> {return sem.tipoReal();} | <bool> {return sem.tipoBool();} | <string> {return sem.tipoString();}  | tok=<identificador> {return sem.tipoId(sem.str(tok.image,tok.beginLine,tok.beginColumn));} | t=Array() {return t;} | t=Registro() {return t;} | t=Puntero(){return t;}}
+	Tipo Array(): 										{Token tok;Tipo t;} 							{<array> <corcheteAbierto> tok=<numEnt> <corcheteCerrado> <of> t=Tipo() {return sem.tipoArray(sem.str(tok.image,tok.beginLine,tok.beginColumn), t);}}
+	Tipo Registro(): 										{Campos campos;} 								{<record> <llaveAbierta> campos=Campos() <llaveCerrada> {return sem.tipoRegistro(campos);}}
+	Campos Campos(): 										{Campo campo; Campos campos;} 					{campo=Campo() campos=CamposAux(sem.campos_uno(campo)) {return campos;}}
+	Campos CamposAux(Campos camposh): 					{Campo campo; Campos campos;} 					{<puntocoma> campo=Campo() campos=CamposAux(sem.campos_muchos(camposh, campo)) {return campos;} | {return camposh;}}
+	Campo Campo(): 										{Tipo t; Token tok;} 							{t=Tipo() tok=<identificador> {return sem.campo(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}}
+	Tipo Puntero(): 										{Tipo t;} 										{<pointer> t=Tipo() {return sem.tipoPuntero(t);}}
+	Instrs SecInstr(): 									{Instrs instrs; Instr instr;} 					{instr=Instruccion() instrs=SecInstrAux(sem.instr_una(instr)) {return instrs;}}
+	Instrs SecInstrAux(Instrs instrsh): 					{Instrs instrs; Instr instr;} 					{<puntocoma> instr=Instruccion() instrs=SecInstrAux(sem.instr_muchas(instrsh, instr)) {return instrs;}| {return instrsh;}}
+	Instr Instruccion(): 									{Instr instr; Bloque bloque;} 					{instr=InstruccionAsignacion() {return instr;} | instr=InstruccionIf() {return instr;} | instr=InstruccionWhile() {return instr;} | instr=InstruccionRead() {return instr;} | instr=InstruccionWrite() {return instr;} | <nl> {return sem.instruccionNL();} | instr=InstruccionNew() {return instr;} | instr=InstruccionDelete() {return instr;} | instr=InstruccionCall() {return instr;} | bloque=Bloque() {return sem.instruccionBloque(bloque);}}
+	Instr InstruccionAsignacion(): 						{Exp exp_iz; Exp exp_der;}				 		{exp_iz=E0() <asignacion> exp_der=E0() {return sem.instruccionAsig(exp_iz, exp_der);}}
+	Instr InstruccionIf(): 								{Exp exp; Instrs instrs; Instr instr;}			{<tif> exp=E0() <then> instrs=SecInstr2() instr=InstruccionIf_aux(exp, instrs) {return instr;}}
+	Instr InstruccionIf_aux(Exp exph, Instrs instrsh): 	{Exp exp; Instrs instrs; Instrs instrs_else;}						{<endif> {return sem.instruccionIf(exph,instrsh);} | <telse> instrs_else=SecInstr2() <endif> {return sem.instruccionIfElse(exph,instrsh,instrs_else);}}
+	Instrs SecInstr2(): 									{Instrs instrs;} 								{instrs=SecInstr() {return instrs;} | {return sem.instr_vacia();}}
+	Instr InstruccionWhile(): 							{Exp exp; Instrs instrs;} 						{<twhile> exp=E0() <tdo> instrs=SecInstr2() <endwhile> {return sem.instruccionWhile(exp,instrs);}}
+	Instr InstruccionRead(): 								{Exp exp;} 										{<read> exp=E0() {return sem.instruccionRead(exp);}}
+	Instr InstruccionWrite(): 							{Exp exp;} 										{<write> exp=E0() {return sem.instruccionWrite(exp);}}
+	Instr InstruccionNew(): 								{Exp exp;} 										{<tnew> exp=E0() {return sem.instruccionNew(exp);}}
+	Instr InstruccionDelete(): 							{Exp exp;} 										{<delete> exp=E0() {return sem.instruccionDelete(exp);}}
+	Instr InstruccionCall(): 								{Token tok; ParamReales params;} 				{<call> tok=<identificador> <parAbierto> params=ParametrosReales() <parCerrado> {return sem.instruccionCall(sem.str(tok.image,tok.beginLine,tok.beginColumn), params);}}
+	ParamReales ParametrosReales():                       {Exp exp; ParamReales param;}        			{exp=E0() param=ParametrosRealesAux(sem.paramReales_uno(exp)) {return param;} | {return sem.paramReales_vacios();}}
+	ParamReales ParametrosRealesAux(ParamReales paramh):  {Exp exp; ParamReales params;}         			{<coma> exp=E0() params=ParametrosRealesAux(sem.paramReales_muchos(exp, paramh)) {return params;} | {return paramh;}}
+	Exp ExpresionBasica():                                {Token tok;}                                  	{tok=<numEnt> {return sem.num_ent(sem.str(tok.image,tok.beginLine,tok.beginColumn));} | tok=<numReal> {return sem.num_real(sem.str(tok.image,tok.beginLine,tok.beginColumn));}| tok=<identificador> {return sem.id(sem.str(tok.image,tok.beginLine,tok.beginColumn));} | tok=<booleans> {return sem.booleano(sem.str(tok.image,tok.beginLine,tok.beginColumn));} | tok=<cadena> {return sem.cadena(sem.str(tok.image,tok.beginLine,tok.beginColumn));} | <tnull> {return sem.nulo();}}
+	Exp E0():                                             {Exp exp1, resul;}                  			{exp1=E1() resul=E0_AUX(exp1) {return resul;}}
+	Exp E0_AUX(Exp exph):                                 {Exp exp1;}                          			{<suma> exp1=E0() {return sem.mas(exph, exp1);} | <resta> exp1=E1() {return sem.menos(exph, exp1);} | {return exph;}}
+	Exp E1():                                             {Exp exp1, resul;}                  			{exp1=E2() resul=E1_AUX(exp1) {return resul;}}
+	Exp E1_AUX(Exp exph):                                 {String op; Exp exp2; Exp exp;}        			{op=Op1() exp2=E2() exp=E1_AUX(sem.exp(op,exph,exp2)) {return exp;} | {return exph;}}
+	Exp E2():                                             {Exp exp, resul;}                   			{exp=E3() resul=E2_AUX(exp) {return resul;}}
+	Exp E2_AUX (Exp exph):                                {String op; Exp exp3; Exp exp;}        			{op=Op2() exp3=E3() exp=E2_AUX(sem.exp(op,exph,exp3)) {return exp;}| {return exph;}}
+	Exp E3():                                             {Exp exp, resul;}                   			{exp=E4() resul=E3_AUX(exp) {return resul;}}
+	Exp E3_AUX (Exp exph):   								{String op; Exp exp4;}    						{op=Op3() exp4=E4() {return sem.exp(op, exph, exp4);} | {return exph;}}
+	Exp E4():                                             {Exp exp;}                                  	{<not> exp=E4() {return sem.not(exp);} | <resta> exp=E5() {return sem.negativo(exp);} | exp=E5() {return exp;} }
+	Exp E5():                                             {Exp exp, resul;}                               {exp=E6() resul=E5_AUX(exp) {return resul;}}
+	Exp E5_AUX (Exp exph):                                {Exp exp, resul;Token tok;}                     {exp=Indexacion() resul=E5_AUX(exph) {return sem.indexacion(resul,exp);} | tok=Acceso_registro() resul=E5_AUX(exph) {return sem.acceso_registro(sem.str(tok.image,tok.beginLine,tok.beginColumn), resul);} | {return exph;}}
+	Exp E6():                                             {Exp exp;}                 						{<mult> exp=E6() {return sem.asterisco(exp);} | exp=E7() {return exp;}}
+	Exp E7():                                             {Exp exp;}                 						{exp=ExpresionBasica() {return exp;} | <parAbierto> exp=E0() <parCerrado> {return exp;}}
+	String Op1():                                         {}                                  			{<and> {return "and";} | <or> {return "or";}}
+	String Op2():                                         {}                                  			{<menor> {return "menor";} | <mayor> {return "mayor";} | <menorIgual> {return "menorIgual";} | <mayorIgual> {return "mayorIgual";} | <diferente> {return "diferente";} | <igual> {return "igual";}}
+	String Op3():                                         {}                                  			{<mult> {return "mult";} | <div> {return "div";}| <porcentaje> {return "porcentaje";}}
+	Exp Indexacion(): 									{Exp exp;} 										{<corcheteAbierto> exp=E0() <corcheteCerrado> {return exp;} }
+	Token Acceso_registro(): 								{Token tok;} 									{<punto> tok=<identificador> {return tok;} | <flecha> tok=<identificador> {return tok;}}
