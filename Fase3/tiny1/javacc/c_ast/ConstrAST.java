@@ -6,1400 +6,1069 @@ import asint.AnalizadorSintacticoTiny.Boolean;
 import semOps.SemOps;
 
 public class ConstrAST implements ConstrASTConstants {
-	private SemOps sem = new SemOps();
-
-	final public Prog Sp() throws ParseException {
-		Prog prog;
-		prog = S();
-		jj_consume_token(0);
-		{
-			if (true)
-				return prog;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Prog S() throws ParseException {
-		Decs decs;
-		Instrs instrs;
-		decs = SecDec();
-		instrs = SecInstr();
-		{
-			if (true)
-				return sem.prog(decs, instrs);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Decs SecDec() throws ParseException {
-		Decs decs;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case proc:
-		case var:
-		case type:
-			decs = Declaraciones();
-			jj_consume_token(separador); {
-			if (true)
-				return decs;
-		}
-			break;
-		default:
-			jj_la1[0] = jj_gen; {
-			if (true)
-				return sem.decs_vacia();
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Decs Declaraciones() throws ParseException {
-		Decs decs;
-		Dec dec;
-		dec = Declaracion();
-		decs = DeclaracionesAux(sem.decs_una(dec));
-		{
-			if (true)
-				return decs;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Decs DeclaracionesAux(Decs decsh) throws ParseException {
-		Decs decs;
-		Dec dec;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case puntocoma:
-			jj_consume_token(puntocoma);
-			dec = Declaracion();
-			decs = DeclaracionesAux(sem.decs_muchas(decsh, dec)); {
-			if (true)
-				return decs;
-		}
-			break;
-		default:
-			jj_la1[1] = jj_gen; {
-			if (true)
-				return decsh;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Dec Declaracion() throws ParseException {
-		Dec dec;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case var:
-			dec = DeclaracionVar(); {
-			if (true)
-				return dec;
-		}
-			break;
-		case type:
-			dec = DeclaracionTipo(); {
-			if (true)
-				return dec;
-		}
-			break;
-		case proc:
-			dec = DeclaracionProc(); {
-			if (true)
-				return dec;
-		}
-			break;
-		default:
-			jj_la1[2] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Dec DeclaracionVar() throws ParseException {
-		Tipo t;
-		Token tok;
-		jj_consume_token(var);
-		t = Tipo();
-		tok = jj_consume_token(identificador);
-		{
-			if (true)
-				return sem.dec_var(t, sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Dec DeclaracionTipo() throws ParseException {
-		Tipo t;
-		Token tok;
-		jj_consume_token(type);
-		t = Tipo();
-		tok = jj_consume_token(identificador);
-		{
-			if (true)
-				return sem.dec_tipo(t, sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Dec DeclaracionProc() throws ParseException {
-		Token tok;
-		ParamsForm params;
-		Bloque bloque;
-		jj_consume_token(proc);
-		tok = jj_consume_token(identificador);
-		jj_consume_token(parAbierto);
-		params = ParametrosFormales();
-		jj_consume_token(parCerrado);
-		bloque = Bloque();
-		{
-			if (true)
-				return sem.dec_proc(sem.str(tok.image, tok.beginLine, tok.beginColumn), params, bloque);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public ParamsForm ParametrosFormales() throws ParseException {
-		Param param;
-		ParamsForm params;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case integer:
-		case real:
-		case bool:
-		case string:
-		case record:
-		case array:
-		case pointer:
-		case identificador:
-			param = Parametro();
-			params = ParametrosFormalesAux(sem.paramsForm_uno(param)); {
-			if (true)
-				return params;
-		}
-			break;
-		default:
-			jj_la1[3] = jj_gen; {
-			if (true)
-				return sem.paramsForm_vacio();
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public ParamsForm ParametrosFormalesAux(ParamsForm paramsh) throws ParseException {
-		Param param;
-		ParamsForm params;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case coma:
-			jj_consume_token(coma);
-			param = Parametro();
-			params = ParametrosFormalesAux(sem.paramsForm_muchos(paramsh, param)); {
-			if (true)
-				return params;
-		}
-			break;
-		default:
-			jj_la1[4] = jj_gen; {
-			if (true)
-				return paramsh;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Param Parametro() throws ParseException {
-		Tipo t;
-		Param param;
-		t = Tipo();
-		param = ParametroAux(t);
-		{
-			if (true)
-				return param;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Param ParametroAux(Tipo th) throws ParseException {
-		Token tok;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case identificador:
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return sem.param_sin_amp(th, sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case ampersand:
-			jj_consume_token(ampersand);
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return sem.param_con_amp(th, sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		default:
-			jj_la1[5] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Bloque Bloque() throws ParseException {
-		Decs decs;
-		Instrs instrs;
-		jj_consume_token(llaveAbierta);
-		decs = SecDec();
-		instrs = SecInstr();
-		jj_consume_token(llaveCerrada);
-		{
-			if (true)
-				return sem.bloque(decs, instrs);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Tipo Tipo() throws ParseException {
-		Token tok;
-		Tipo t;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case integer:
-			jj_consume_token(integer); {
-			if (true)
-				return sem.tipoInt();
-		}
-			break;
-		case real:
-			jj_consume_token(real); {
-			if (true)
-				return sem.tipoReal();
-		}
-			break;
-		case bool:
-			jj_consume_token(bool); {
-			if (true)
-				return sem.tipoBool();
-		}
-			break;
-		case string:
-			jj_consume_token(string); {
-			if (true)
-				return sem.tipoString();
-		}
-			break;
-		case identificador:
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return sem.tipoId(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case array:
-			t = Array(); {
-			if (true)
-				return t;
-		}
-			break;
-		case record:
-			t = Registro(); {
-			if (true)
-				return t;
-		}
-			break;
-		case pointer:
-			t = Puntero(); {
-			if (true)
-				return t;
-		}
-			break;
-		default:
-			jj_la1[6] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Tipo Array() throws ParseException {
-		Token tok;
-		Tipo t;
-		jj_consume_token(array);
-		jj_consume_token(corcheteAbierto);
-		tok = jj_consume_token(numEnt);
-		jj_consume_token(corcheteCerrado);
-		jj_consume_token(of);
-		t = Tipo();
-		{
-			if (true)
-				return sem.tipoArray(sem.str(tok.image, tok.beginLine, tok.beginColumn), t);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Tipo Registro() throws ParseException {
-		Campos campos;
-		jj_consume_token(record);
-		jj_consume_token(llaveAbierta);
-		campos = Campos();
-		jj_consume_token(llaveCerrada);
-		{
-			if (true)
-				return sem.tipoRegistro(campos);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Campos Campos() throws ParseException {
-		Campo campo;
-		Campos campos;
-		campo = Campo();
-		campos = CamposAux(sem.campos_uno(campo));
-		{
-			if (true)
-				return campos;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Campos CamposAux(Campos camposh) throws ParseException {
-		Campo campo;
-		Campos campos;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case puntocoma:
-			jj_consume_token(puntocoma);
-			campo = Campo();
-			campos = CamposAux(sem.campos_muchos(camposh, campo)); {
-			if (true)
-				return campos;
-		}
-			break;
-		default:
-			jj_la1[7] = jj_gen; {
-			if (true)
-				return camposh;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Campo Campo() throws ParseException {
-		Tipo t;
-		Token tok;
-		t = Tipo();
-		tok = jj_consume_token(identificador);
-		{
-			if (true)
-				return sem.campo(t, sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Tipo Puntero() throws ParseException {
-		Tipo t;
-		jj_consume_token(pointer);
-		t = Tipo();
-		{
-			if (true)
-				return sem.tipoPuntero(t);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instrs SecInstr() throws ParseException {
-		Instrs instrs;
-		Instr instr;
-		instr = Instruccion();
-		instrs = SecInstrAux(sem.instr_una(instr));
-		{
-			if (true)
-				return instrs;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instrs SecInstrAux(Instrs instrsh) throws ParseException {
-		Instrs instrs;
-		Instr instr;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case puntocoma:
-			jj_consume_token(puntocoma);
-			instr = Instruccion();
-			instrs = SecInstrAux(sem.instr_muchas(instrsh, instr)); {
-			if (true)
-				return instrs;
-		}
-			break;
-		default:
-			jj_la1[8] = jj_gen; {
-			if (true)
-				return instrsh;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr Instruccion() throws ParseException {
-		Instr instr;
-		Bloque bloque;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case numEnt:
-		case numReal:
-		case booleans:
-		case parAbierto:
-		case resta:
-		case mult:
-		case not:
-		case tnull:
-		case cadena:
-		case identificador:
-			instr = InstruccionAsignacion(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case tif:
-			instr = InstruccionIf(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case twhile:
-			instr = InstruccionWhile(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case read:
-			instr = InstruccionRead(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case write:
-			instr = InstruccionWrite(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case nl:
-			jj_consume_token(nl); {
-			if (true)
-				return sem.instruccionNL();
-		}
-			break;
-		case tnew:
-			instr = InstruccionNew(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case delete:
-			instr = InstruccionDelete(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case call:
-			instr = InstruccionCall(); {
-			if (true)
-				return instr;
-		}
-			break;
-		case llaveAbierta:
-			bloque = Bloque(); {
-			if (true)
-				return sem.instruccionBloque(bloque);
-		}
-			break;
-		default:
-			jj_la1[9] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionAsignacion() throws ParseException {
-		Exp exp_iz;
-		Exp exp_der;
-		exp_iz = E0();
-		jj_consume_token(asignacion);
-		exp_der = E0();
-		{
-			if (true)
-				return sem.instruccionAsig(exp_iz, exp_der);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionIf() throws ParseException {
-		Exp exp;
-		Instrs instrs;
-		Instr instr;
-		jj_consume_token(tif);
-		exp = E0();
-		jj_consume_token(then);
-		instrs = SecInstr2();
-		instr = InstruccionIf_aux(exp, instrs);
-		{
-			if (true)
-				return instr;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionIf_aux(Exp exph, Instrs instrsh) throws ParseException {
-		Exp exp;
-		Instrs instrs;
-		Instrs instrs_else;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case endif:
-			jj_consume_token(endif); {
-			if (true)
-				return sem.instruccionIf(exph, instrsh);
-		}
-			break;
-		case telse:
-			jj_consume_token(telse);
-			instrs_else = SecInstr2();
-			jj_consume_token(endif); {
-			if (true)
-				return sem.instruccionIfElse(exph, instrsh, instrs_else);
-		}
-			break;
-		default:
-			jj_la1[10] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instrs SecInstr2() throws ParseException {
-		Instrs instrs;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case numEnt:
-		case numReal:
-		case booleans:
-		case parAbierto:
-		case resta:
-		case mult:
-		case not:
-		case llaveAbierta:
-		case tnull:
-		case tif:
-		case twhile:
-		case call:
-		case tnew:
-		case delete:
-		case read:
-		case write:
-		case nl:
-		case cadena:
-		case identificador:
-			instrs = SecInstr(); {
-			if (true)
-				return instrs;
-		}
-			break;
-		default:
-			jj_la1[11] = jj_gen; {
-			if (true)
-				return sem.instr_vacia();
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionWhile() throws ParseException {
-		Exp exp;
-		Instrs instrs;
-		jj_consume_token(twhile);
-		exp = E0();
-		jj_consume_token(tdo);
-		instrs = SecInstr2();
-		jj_consume_token(endwhile);
-		{
-			if (true)
-				return sem.instruccionWhile(exp, instrs);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionRead() throws ParseException {
-		Exp exp;
-		jj_consume_token(read);
-		exp = E0();
-		{
-			if (true)
-				return sem.instruccionRead(exp);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionWrite() throws ParseException {
-		Exp exp;
-		jj_consume_token(write);
-		exp = E0();
-		{
-			if (true)
-				return sem.instruccionWrite(exp);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionNew() throws ParseException {
-		Exp exp;
-		jj_consume_token(tnew);
-		exp = E0();
-		{
-			if (true)
-				return sem.instruccionNew(exp);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionDelete() throws ParseException {
-		Exp exp;
-		jj_consume_token(delete);
-		exp = E0();
-		{
-			if (true)
-				return sem.instruccionDelete(exp);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Instr InstruccionCall() throws ParseException {
-		Token tok;
-		ParamReales params;
-		jj_consume_token(call);
-		tok = jj_consume_token(identificador);
-		jj_consume_token(parAbierto);
-		params = ParametrosReales();
-		jj_consume_token(parCerrado);
-		{
-			if (true)
-				return sem.instruccionCall(sem.str(tok.image, tok.beginLine, tok.beginColumn), params);
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public ParamReales ParametrosReales() throws ParseException {
-		Exp exp;
-		ParamReales param;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case numEnt:
-		case numReal:
-		case booleans:
-		case parAbierto:
-		case resta:
-		case mult:
-		case not:
-		case tnull:
-		case cadena:
-		case identificador:
-			exp = E0();
-			param = ParametrosRealesAux(sem.paramReales_uno(exp)); {
-			if (true)
-				return param;
-		}
-			break;
-		default:
-			jj_la1[12] = jj_gen; {
-			if (true)
-				return sem.paramReales_vacios();
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public ParamReales ParametrosRealesAux(ParamReales paramh) throws ParseException {
-		Exp exp;
-		ParamReales params;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case coma:
-			jj_consume_token(coma);
-			exp = E0();
-			params = ParametrosRealesAux(sem.paramReales_muchos(exp, paramh)); {
-			if (true)
-				return params;
-		}
-			break;
-		default:
-			jj_la1[13] = jj_gen; {
-			if (true)
-				return paramh;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp ExpresionBasica() throws ParseException {
-		Token tok;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case numEnt:
-			tok = jj_consume_token(numEnt); {
-			if (true)
-				return sem.num_ent(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case numReal:
-			tok = jj_consume_token(numReal); {
-			if (true)
-				return sem.num_real(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case identificador:
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return sem.id(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case booleans:
-			tok = jj_consume_token(booleans); {
-			if (true)
-				return sem.booleano(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case cadena:
-			tok = jj_consume_token(cadena); {
-			if (true)
-				return sem.cadena(sem.str(tok.image, tok.beginLine, tok.beginColumn));
-		}
-			break;
-		case tnull:
-			jj_consume_token(tnull); {
-			if (true)
-				return sem.nulo();
-		}
-			break;
-		default:
-			jj_la1[14] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E0() throws ParseException {
-		Exp exp1, resul;
-		exp1 = E1();
-		resul = E0_AUX(exp1);
-		{
-			if (true)
-				return resul;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E0_AUX(Exp exph) throws ParseException {
-		Exp exp1;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case suma:
-			jj_consume_token(suma);
-			exp1 = E0(); {
-			if (true)
-				return sem.mas(exph, exp1);
-		}
-			break;
-		case resta:
-			jj_consume_token(resta);
-			exp1 = E1(); {
-			if (true)
-				return sem.menos(exph, exp1);
-		}
-			break;
-		default:
-			jj_la1[15] = jj_gen; {
-			if (true)
-				return exph;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E1() throws ParseException {
-		Exp exp1, resul;
-		exp1 = E2();
-		resul = E1_AUX(exp1);
-		{
-			if (true)
-				return resul;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E1_AUX(Exp exph) throws ParseException {
-		String op;
-		Exp exp2;
-		Exp exp;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case and:
-		case or:
-			op = Op1();
-			exp2 = E2();
-			exp = E1_AUX(sem.exp(op, exph, exp2)); {
-			if (true)
-				return exp;
-		}
-			break;
-		default:
-			jj_la1[16] = jj_gen; {
-			if (true)
-				return exph;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E2() throws ParseException {
-		Exp exp, resul;
-		exp = E3();
-		resul = E2_AUX(exp);
-		{
-			if (true)
-				return resul;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E2_AUX(Exp exph) throws ParseException {
-		String op;
-		Exp exp3;
-		Exp exp;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case mayor:
-		case menor:
-		case mayorIgual:
-		case menorIgual:
-		case igual:
-		case diferente:
-			op = Op2();
-			exp3 = E3();
-			exp = E2_AUX(sem.exp(op, exph, exp3)); {
-			if (true)
-				return exp;
-		}
-			break;
-		default:
-			jj_la1[17] = jj_gen; {
-			if (true)
-				return exph;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E3() throws ParseException {
-		Exp exp, resul;
-		exp = E4();
-		resul = E3_AUX(exp);
-		{
-			if (true)
-				return resul;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E3_AUX(Exp exph) throws ParseException {
-		String op;
-		Exp exp4;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case div:
-		case mult:
-		case porcentaje:
-			op = Op3();
-			exp4 = E4(); {
-			if (true)
-				return sem.exp(op, exph, exp4);
-		}
-			break;
-		default:
-			jj_la1[18] = jj_gen; {
-			if (true)
-				return exph;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E4() throws ParseException {
-		Exp exp;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case not:
-			jj_consume_token(not);
-			exp = E4(); {
-			if (true)
-				return sem.not(exp);
-		}
-			break;
-		case resta:
-			jj_consume_token(resta);
-			exp = E5(); {
-			if (true)
-				return sem.negativo(exp);
-		}
-			break;
-		case numEnt:
-		case numReal:
-		case booleans:
-		case parAbierto:
-		case mult:
-		case tnull:
-		case cadena:
-		case identificador:
-			exp = E5(); {
-			if (true)
-				return exp;
-		}
-			break;
-		default:
-			jj_la1[19] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E5() throws ParseException {
-		Exp exp, resul;
-		exp = E6();
-		resul = E5_AUX(exp);
-		{
-			if (true)
-				return resul;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E5_AUX(Exp exph) throws ParseException {
-		Exp exp, resul;
-		Token tok;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case corcheteAbierto:
-			exp = Indexacion();
-			resul = E5_AUX(exph); {
-			if (true)
-				return sem.indexacion(resul, exp);
-		}
-			break;
-		case punto:
-		case flecha:
-			tok = Acceso_registro();
-			resul = E5_AUX(exph); {
-			if (true)
-				return sem.acceso_registro(sem.str(tok.image, tok.beginLine, tok.beginColumn), resul);
-		}
-			break;
-		default:
-			jj_la1[20] = jj_gen; {
-			if (true)
-				return exph;
-		}
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E6() throws ParseException {
-		Exp exp;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case mult:
-			jj_consume_token(mult);
-			exp = E6(); {
-			if (true)
-				return sem.asterisco(exp);
-		}
-			break;
-		case numEnt:
-		case numReal:
-		case booleans:
-		case parAbierto:
-		case tnull:
-		case cadena:
-		case identificador:
-			exp = E7(); {
-			if (true)
-				return exp;
-		}
-			break;
-		default:
-			jj_la1[21] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp E7() throws ParseException {
-		Exp exp;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case numEnt:
-		case numReal:
-		case booleans:
-		case tnull:
-		case cadena:
-		case identificador:
-			exp = ExpresionBasica(); {
-			if (true)
-				return exp;
-		}
-			break;
-		case parAbierto:
-			jj_consume_token(parAbierto);
-			exp = E0();
-			jj_consume_token(parCerrado); {
-			if (true)
-				return exp;
-		}
-			break;
-		default:
-			jj_la1[22] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public String Op1() throws ParseException {
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case and:
-			jj_consume_token(and); {
-			if (true)
-				return "and";
-		}
-			break;
-		case or:
-			jj_consume_token(or); {
-			if (true)
-				return "or";
-		}
-			break;
-		default:
-			jj_la1[23] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public String Op2() throws ParseException {
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case menor:
-			jj_consume_token(menor); {
-			if (true)
-				return "menor";
-		}
-			break;
-		case mayor:
-			jj_consume_token(mayor); {
-			if (true)
-				return "mayor";
-		}
-			break;
-		case menorIgual:
-			jj_consume_token(menorIgual); {
-			if (true)
-				return "menorIgual";
-		}
-			break;
-		case mayorIgual:
-			jj_consume_token(mayorIgual); {
-			if (true)
-				return "mayorIgual";
-		}
-			break;
-		case diferente:
-			jj_consume_token(diferente); {
-			if (true)
-				return "diferente";
-		}
-			break;
-		case igual:
-			jj_consume_token(igual); {
-			if (true)
-				return "igual";
-		}
-			break;
-		default:
-			jj_la1[24] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public String Op3() throws ParseException {
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case mult:
-			jj_consume_token(mult); {
-			if (true)
-				return "mult";
-		}
-			break;
-		case div:
-			jj_consume_token(div); {
-			if (true)
-				return "div";
-		}
-			break;
-		case porcentaje:
-			jj_consume_token(porcentaje); {
-			if (true)
-				return "porcentaje";
-		}
-			break;
-		default:
-			jj_la1[25] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Exp Indexacion() throws ParseException {
-		Exp exp;
-		jj_consume_token(corcheteAbierto);
-		exp = E0();
-		jj_consume_token(corcheteCerrado);
-		{
-			if (true)
-				return exp;
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	final public Token Acceso_registro() throws ParseException {
-		Token tok;
-		switch ((jj_ntk == -1) ? jj_ntk() : jj_ntk) {
-		case punto:
-			jj_consume_token(punto);
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return tok;
-		}
-			break;
-		case flecha:
-			jj_consume_token(flecha);
-			tok = jj_consume_token(identificador); {
-			if (true)
-				return tok;
-		}
-			break;
-		default:
-			jj_la1[26] = jj_gen;
-			jj_consume_token(-1);
-			throw new ParseException();
-		}
-		throw new Error("Missing return statement in function");
-	}
-
-	/** Generated Token Manager. */
-	public ConstrASTTokenManager token_source;
-	SimpleCharStream jj_input_stream;
-	/** Current token. */
-	public Token token;
-	/** Next token. */
-	public Token jj_nt;
-	private int jj_ntk;
-	private int jj_gen;
-	final private int[] jj_la1 = new int[27];
-	static private int[] jj_la1_0;
-	static private int[] jj_la1_1;
-	static private int[] jj_la1_2;
-	static {
-		jj_la1_init_0();
-		jj_la1_init_1();
-		jj_la1_init_2();
-	}
-
-	private static void jj_la1_init_0() {
-		jj_la1_0 = new int[] { 0x0, 0x10000, 0x0, 0xe00, 0x0, 0x0, 0xe00, 0x10000, 0x10000, 0x2527000, 0x0, 0x2527000,
-				0x2527000, 0x0, 0x7000, 0x180000, 0x1800000, 0xfc000000, 0x600000, 0x2527000, 0x0, 0x427000, 0x27000,
-				0x1800000, 0xfc000000, 0x600000, 0x0, };
-	}
-
-	private static void jj_la1_init_1() {
-		jj_la1_1 = new int[] { 0x60000800, 0x0, 0x60000800, 0xb00200, 0x80, 0x100, 0xb00200, 0x0, 0x0, 0x9f091408,
-				0xc000, 0x9f091408, 0x80000400, 0x80, 0x80000400, 0x0, 0x0, 0x0, 0x1, 0x80000400, 0x62, 0x80000400,
-				0x80000400, 0x0, 0x0, 0x1, 0x60, };
-	}
-
-	private static void jj_la1_init_2() {
-		jj_la1_2 = new int[] { 0x0, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x1, 0x0, 0x0, 0x0,
-				0x0, 0x1, 0x0, 0x1, 0x1, 0x0, 0x0, 0x0, 0x0, };
-	}
-
-	/** Constructor with InputStream. */
-	public ConstrAST(java.io.InputStream stream) {
-		this(stream, null);
-	}
-
-	/** Constructor with InputStream and supplied encoding */
-	public ConstrAST(java.io.InputStream stream, String encoding) {
-		try {
-			jj_input_stream = new SimpleCharStream(stream, encoding, 1, 1);
-		} catch (java.io.UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		token_source = new ConstrASTTokenManager(jj_input_stream);
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	/** Reinitialise. */
-	public void ReInit(java.io.InputStream stream) {
-		ReInit(stream, null);
-	}
-
-	/** Reinitialise. */
-	public void ReInit(java.io.InputStream stream, String encoding) {
-		try {
-			jj_input_stream.ReInit(stream, encoding, 1, 1);
-		} catch (java.io.UnsupportedEncodingException e) {
-			throw new RuntimeException(e);
-		}
-		token_source.ReInit(jj_input_stream);
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	/** Constructor. */
-	public ConstrAST(java.io.Reader stream) {
-		jj_input_stream = new SimpleCharStream(stream, 1, 1);
-		token_source = new ConstrASTTokenManager(jj_input_stream);
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	/** Reinitialise. */
-	public void ReInit(java.io.Reader stream) {
-		jj_input_stream.ReInit(stream, 1, 1);
-		token_source.ReInit(jj_input_stream);
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	/** Constructor with generated Token Manager. */
-	public ConstrAST(ConstrASTTokenManager tm) {
-		token_source = tm;
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	/** Reinitialise. */
-	public void ReInit(ConstrASTTokenManager tm) {
-		token_source = tm;
-		token = new Token();
-		jj_ntk = -1;
-		jj_gen = 0;
-		for (int i = 0; i < 27; i++)
-			jj_la1[i] = -1;
-	}
-
-	private Token jj_consume_token(int kind) throws ParseException {
-		Token oldToken;
-		if ((oldToken = token).next != null)
-			token = token.next;
-		else
-			token = token.next = token_source.getNextToken();
-		jj_ntk = -1;
-		if (token.kind == kind) {
-			jj_gen++;
-			return token;
-		}
-		token = oldToken;
-		jj_kind = kind;
-		throw generateParseException();
-	}
-
-	/** Get the next Token. */
-	final public Token getNextToken() {
-		if (token.next != null)
-			token = token.next;
-		else
-			token = token.next = token_source.getNextToken();
-		jj_ntk = -1;
-		jj_gen++;
-		return token;
-	}
-
-	/** Get the specific Token. */
-	final public Token getToken(int index) {
-		Token t = token;
-		for (int i = 0; i < index; i++) {
-			if (t.next != null)
-				t = t.next;
-			else
-				t = t.next = token_source.getNextToken();
-		}
-		return t;
-	}
-
-	private int jj_ntk() {
-		if ((jj_nt = token.next) == null)
-			return (jj_ntk = (token.next = token_source.getNextToken()).kind);
-		else
-			return (jj_ntk = jj_nt.kind);
-	}
-
-	private java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
-	private int[] jj_expentry;
-	private int jj_kind = -1;
-
-	/** Generate ParseException. */
-	public ParseException generateParseException() {
-		jj_expentries.clear();
-		boolean[] la1tokens = new boolean[65];
-		if (jj_kind >= 0) {
-			la1tokens[jj_kind] = true;
-			jj_kind = -1;
-		}
-		for (int i = 0; i < 27; i++) {
-			if (jj_la1[i] == jj_gen) {
-				for (int j = 0; j < 32; j++) {
-					if ((jj_la1_0[i] & (1 << j)) != 0) {
-						la1tokens[j] = true;
-					}
-					if ((jj_la1_1[i] & (1 << j)) != 0) {
-						la1tokens[32 + j] = true;
-					}
-					if ((jj_la1_2[i] & (1 << j)) != 0) {
-						la1tokens[64 + j] = true;
-					}
-				}
-			}
-		}
-		for (int i = 0; i < 65; i++) {
-			if (la1tokens[i]) {
-				jj_expentry = new int[1];
-				jj_expentry[0] = i;
-				jj_expentries.add(jj_expentry);
-			}
-		}
-		int[][] exptokseq = new int[jj_expentries.size()][];
-		for (int i = 0; i < jj_expentries.size(); i++) {
-			exptokseq[i] = jj_expentries.get(i);
-		}
-		return new ParseException(token, exptokseq, tokenImage);
-	}
-
-	/** Enable tracing. */
-	final public void enable_tracing() {
-	}
-
-	/** Disable tracing. */
-	final public void disable_tracing() {
-	}
+         private SemOps sem = new SemOps();
+
+  final public Prog Sp() throws ParseException {
+                                                                                                                 Prog prog;
+    prog = S();
+    jj_consume_token(0);
+                                                                                                                                                                                                                 {if (true) return prog;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Prog S() throws ParseException {
+                                                                                                                 Decs decs; Instrs instrs;
+    decs = SecDec();
+    instrs = SecInstr();
+                                                                                                                                                                                                                  {if (true) return sem.prog(decs,instrs);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Decs SecDec() throws ParseException {
+                                                                                                         Decs decs;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case proc:
+    case var:
+    case type:
+      decs = Declaraciones();
+      jj_consume_token(separador);
+                                                                                                                                                                                                                           {if (true) return decs;}
+      break;
+    default:
+      jj_la1[0] = jj_gen;
+                                                                                                                                                                                                                                            {if (true) return sem.decs_vacia();}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Decs Declaraciones() throws ParseException {
+                                                                                                 Decs decs; Dec dec;
+    dec = Declaracion();
+    decs = DeclaracionesAux(sem.decs_una(dec));
+                                                                                                                                                                                                                                     {if (true) return decs;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Decs DeclaracionesAux(Decs decsh) throws ParseException {
+                                                                                         Decs decs;Dec dec;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case puntocoma:
+      jj_consume_token(puntocoma);
+      dec = Declaracion();
+      decs = DeclaracionesAux(sem.decs_muchas(decsh, dec));
+                                                                                                                                                                                                                                                   {if (true) return decs;}
+      break;
+    default:
+      jj_la1[1] = jj_gen;
+                                                                                                                                                                                                                                                                   {if (true) return decsh;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Dec Declaracion() throws ParseException {
+                                                                                                         Dec dec;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case var:
+      dec = DeclaracionVar();
+                                                                                                                                                                                                                       {if (true) return dec;}
+      break;
+    case type:
+      dec = DeclaracionTipo();
+                                                                                                                                                                                                                                                             {if (true) return dec;}
+      break;
+    case proc:
+      dec = DeclaracionProc();
+                                                                                                                                                                                                                                                                                                   {if (true) return dec;}
+      break;
+    default:
+      jj_la1[2] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Dec DeclaracionVar() throws ParseException {
+                                                                                                 Tipo t; Token tok;
+    jj_consume_token(var);
+    t = Tipo();
+    tok = jj_consume_token(identificador);
+                                                                                                                                                                                                             {if (true) return sem.dec_var(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Dec DeclaracionTipo() throws ParseException {
+                                                                                                 Tipo t; Token tok;
+    jj_consume_token(type);
+    t = Tipo();
+    tok = jj_consume_token(identificador);
+                                                                                                                                                                                                              {if (true) return sem.dec_tipo(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Dec DeclaracionProc() throws ParseException {
+                                                                                                 Token tok; ParamsForm params; Bloque bloque;
+    jj_consume_token(proc);
+    tok = jj_consume_token(identificador);
+    jj_consume_token(parAbierto);
+    params = ParametrosFormales();
+    jj_consume_token(parCerrado);
+    bloque = Bloque();
+                                                                                                                                                                                                                                                   {if (true) return sem.dec_proc(sem.str(tok.image,tok.beginLine,tok.beginColumn), params, bloque);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public ParamsForm ParametrosFormales() throws ParseException {
+                                                                                         Param param; ParamsForm params;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case integer:
+    case real:
+    case bool:
+    case string:
+    case record:
+    case array:
+    case pointer:
+    case identificador:
+      param = Parametro();
+      params = ParametrosFormalesAux(sem.paramsForm_uno(param));
+                                                                                                                                                                                                                                    {if (true) return params;}
+      break;
+    default:
+      jj_la1[3] = jj_gen;
+                                                                                                                                                                                                                                                       {if (true) return sem.paramsForm_vacio();}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public ParamsForm ParametrosFormalesAux(ParamsForm paramsh) throws ParseException {
+                                                                 Param param; ParamsForm params;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case coma:
+      jj_consume_token(coma);
+      param = Parametro();
+      params = ParametrosFormalesAux(sem.paramsForm_muchos(paramsh, param));
+                                                                                                                                                                                                                               {if (true) return params;}
+      break;
+    default:
+      jj_la1[4] = jj_gen;
+                                                                                                                                                                                                                                                  {if (true) return paramsh;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Param Parametro() throws ParseException {
+                                                                                                         Tipo t; Param param;
+    t = Tipo();
+    param = ParametroAux(t);
+                                                                                                                                                                                                                 {if (true) return param;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Param ParametroAux(Tipo th) throws ParseException {
+                                                                                         Token tok;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case identificador:
+      tok = jj_consume_token(identificador);
+                                                                                                                                                                                              {if (true) return sem.param_sin_amp(th, sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case ampersand:
+      jj_consume_token(ampersand);
+      tok = jj_consume_token(identificador);
+                                                                                                                                                                                                                                                                                                                 {if (true) return sem.param_con_amp(th, sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    default:
+      jj_la1[5] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Bloque Bloque() throws ParseException {
+                                                                                                         Decs decs; Instrs instrs;
+    jj_consume_token(llaveAbierta);
+    decs = SecDec();
+    instrs = SecInstr();
+    jj_consume_token(llaveCerrada);
+                                                                                                                                                                                                                                        {if (true) return sem.bloque(decs,instrs);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Tipo Tipo() throws ParseException {
+                                                                                                         Token tok;Tipo t;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case integer:
+      jj_consume_token(integer);
+                                                                                                                                                                                            {if (true) return sem.tipoInt();}
+      break;
+    case real:
+      jj_consume_token(real);
+                                                                                                                                                                                                                             {if (true) return sem.tipoReal();}
+      break;
+    case bool:
+      jj_consume_token(bool);
+                                                                                                                                                                                                                                                               {if (true) return sem.tipoBool();}
+      break;
+    case string:
+      jj_consume_token(string);
+                                                                                                                                                                                                                                                                                                   {if (true) return sem.tipoString();}
+      break;
+    case identificador:
+      tok = jj_consume_token(identificador);
+                                                                                                                                                                                                                                                                                                                                                     {if (true) return sem.tipoId(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case array:
+      t = Array();
+                                                                                                                                                                                                                                                                                                                                                                                                                                        {if (true) return t;}
+      break;
+    case record:
+      t = Registro();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                   {if (true) return t;}
+      break;
+    case pointer:
+      t = Puntero();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            {if (true) return t;}
+      break;
+    default:
+      jj_la1[6] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Tipo Array() throws ParseException {
+                                                                                                         Token tok;Tipo t;
+    jj_consume_token(array);
+    jj_consume_token(corcheteAbierto);
+    tok = jj_consume_token(numEnt);
+    jj_consume_token(corcheteCerrado);
+    jj_consume_token(of);
+    t = Tipo();
+                                                                                                                                                                                                                                                         {if (true) return sem.tipoArray(sem.str(tok.image,tok.beginLine,tok.beginColumn), t);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Tipo Registro() throws ParseException {
+                                                                                                         Campos campos;
+    jj_consume_token(record);
+    jj_consume_token(llaveAbierta);
+    campos = Campos();
+    jj_consume_token(llaveCerrada);
+                                                                                                                                                                                                                                                 {if (true) return sem.tipoRegistro(campos);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Campos Campos() throws ParseException {
+                                                                                                         Campo campo; Campos campos;
+    campo = Campo();
+    campos = CamposAux(sem.campos_uno(campo));
+                                                                                                                                                                                                                                {if (true) return campos;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Campos CamposAux(Campos camposh) throws ParseException {
+                                                                                         Campo campo; Campos campos;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case puntocoma:
+      jj_consume_token(puntocoma);
+      campo = Campo();
+      campos = CamposAux(sem.campos_muchos(camposh, campo));
+                                                                                                                                                                                                                                        {if (true) return campos;}
+      break;
+    default:
+      jj_la1[7] = jj_gen;
+                                                                                                                                                                                                                                                           {if (true) return camposh;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Campo Campo() throws ParseException {
+                                                                                                         Tipo t; Token tok;
+    t = Tipo();
+    tok = jj_consume_token(identificador);
+                                                                                                                                                                                                               {if (true) return sem.campo(t, sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Tipo Puntero() throws ParseException {
+                                                                                                         Tipo t;
+    jj_consume_token(pointer);
+    t = Tipo();
+                                                                                                                                                                                                                     {if (true) return sem.tipoPuntero(t);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instrs SecInstr() throws ParseException {
+                                                                                                         Instrs instrs; Instr instr;
+    instr = Instruccion();
+    instrs = SecInstrAux(sem.instr_una(instr));
+                                                                                                                                                                                                                                       {if (true) return instrs;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instrs SecInstrAux(Instrs instrsh) throws ParseException {
+                                                                                 Instrs instrs; Instr instr;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case puntocoma:
+      jj_consume_token(puntocoma);
+      instr = Instruccion();
+      instrs = SecInstrAux(sem.instr_muchas(instrsh, instr));
+                                                                                                                                                                                                                                       {if (true) return instrs;}
+      break;
+    default:
+      jj_la1[8] = jj_gen;
+                                                                                                                                                                                                                                                         {if (true) return instrsh;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr Instruccion() throws ParseException {
+                                                                                                 Instr instr; Bloque bloque;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case numEnt:
+    case numReal:
+    case booleans:
+    case parAbierto:
+    case resta:
+    case mult:
+    case not:
+    case tnull:
+    case cadena:
+    case identificador:
+      instr = InstruccionAsignacion();
+                                                                                                                                                                                                {if (true) return instr;}
+      break;
+    case tif:
+      instr = InstruccionIf();
+                                                                                                                                                                                                                                        {if (true) return instr;}
+      break;
+    case twhile:
+      instr = InstruccionWhile();
+                                                                                                                                                                                                                                                                                   {if (true) return instr;}
+      break;
+    case read:
+      instr = InstruccionRead();
+                                                                                                                                                                                                                                                                                                                             {if (true) return instr;}
+      break;
+    case write:
+      instr = InstruccionWrite();
+                                                                                                                                                                                                                                                                                                                                                                        {if (true) return instr;}
+      break;
+    case nl:
+      jj_consume_token(nl);
+                                                                                                                                                                                                                                                                                                                                                                                               {if (true) return sem.instruccionNL();}
+      break;
+    case tnew:
+      instr = InstruccionNew();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                      {if (true) return instr;}
+      break;
+    case delete:
+      instr = InstruccionDelete();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  {if (true) return instr;}
+      break;
+    case call:
+      instr = InstruccionCall();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            {if (true) return instr;}
+      break;
+    case llaveAbierta:
+      bloque = Bloque();
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              {if (true) return sem.instruccionBloque(bloque);}
+      break;
+    default:
+      jj_la1[9] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionAsignacion() throws ParseException {
+                                                                                         Exp exp_iz; Exp exp_der;
+    exp_iz = E0();
+    jj_consume_token(asignacion);
+    exp_der = E0();
+                                                                                                                                                                                                        {if (true) return sem.instruccionAsig(exp_iz, exp_der);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionIf() throws ParseException {
+                                                                                                 Exp exp; Instrs instrs; Instr instr;
+    jj_consume_token(tif);
+    exp = E0();
+    jj_consume_token(then);
+    instrs = SecInstr2();
+    instr = InstruccionIf_aux(exp, instrs);
+                                                                                                                                                                                                                                        {if (true) return instr;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionIf_aux(Exp exph, Instrs instrsh) throws ParseException {
+                                                                         Exp exp; Instrs instrs; Instrs instrs_else;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case endif:
+      jj_consume_token(endif);
+                                                                                                                                  {if (true) return sem.instruccionIf(exph,instrsh);}
+      break;
+    case telse:
+      jj_consume_token(telse);
+      instrs_else = SecInstr2();
+      jj_consume_token(endif);
+                                                                                                                                                                                                                      {if (true) return sem.instruccionIfElse(exph,instrsh,instrs_else);}
+      break;
+    default:
+      jj_la1[10] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instrs SecInstr2() throws ParseException {
+                                                                                                 Instrs instrs;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case numEnt:
+    case numReal:
+    case booleans:
+    case parAbierto:
+    case resta:
+    case mult:
+    case not:
+    case llaveAbierta:
+    case tnull:
+    case tif:
+    case twhile:
+    case call:
+    case tnew:
+    case delete:
+    case read:
+    case write:
+    case nl:
+    case cadena:
+    case identificador:
+      instrs = SecInstr();
+                                                                                                                                                                                                    {if (true) return instrs;}
+      break;
+    default:
+      jj_la1[11] = jj_gen;
+                                                                                                                                                                                                                       {if (true) return sem.instr_vacia();}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionWhile() throws ParseException {
+                                                                                                 Exp exp; Instrs instrs;
+    jj_consume_token(twhile);
+    exp = E0();
+    jj_consume_token(tdo);
+    instrs = SecInstr2();
+    jj_consume_token(endwhile);
+                                                                                                                                                                                                                                {if (true) return sem.instruccionWhile(exp,instrs);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionRead() throws ParseException {
+                                                                                                 Exp exp;
+    jj_consume_token(read);
+    exp = E0();
+                                                                                                                                                                                                          {if (true) return sem.instruccionRead(exp);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionWrite() throws ParseException {
+                                                                                                 Exp exp;
+    jj_consume_token(write);
+    exp = E0();
+                                                                                                                                                                                                           {if (true) return sem.instruccionWrite(exp);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionNew() throws ParseException {
+                                                                                                 Exp exp;
+    jj_consume_token(tnew);
+    exp = E0();
+                                                                                                                                                                                                          {if (true) return sem.instruccionNew(exp);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionDelete() throws ParseException {
+                                                                                                 Exp exp;
+    jj_consume_token(delete);
+    exp = E0();
+                                                                                                                                                                                                            {if (true) return sem.instruccionDelete(exp);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Instr InstruccionCall() throws ParseException {
+                                                                                                 Token tok; ParamReales params;
+    jj_consume_token(call);
+    tok = jj_consume_token(identificador);
+    jj_consume_token(parAbierto);
+    params = ParametrosReales();
+    jj_consume_token(parCerrado);
+                                                                                                                                                                                                                                                 {if (true) return sem.instruccionCall(sem.str(tok.image,tok.beginLine,tok.beginColumn), params);}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public ParamReales ParametrosReales() throws ParseException {
+                                                                 Exp exp; ParamReales param;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case numEnt:
+    case numReal:
+    case booleans:
+    case parAbierto:
+    case resta:
+    case mult:
+    case not:
+    case tnull:
+    case cadena:
+    case identificador:
+      exp = E0();
+      param = ParametrosRealesAux(sem.paramReales_uno(exp));
+                                                                                                                                                                                       {if (true) return param;}
+      break;
+    default:
+      jj_la1[12] = jj_gen;
+                                                                                                                                                                                                         {if (true) return sem.paramReales_vacios();}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public ParamReales ParametrosRealesAux(ParamReales paramh) throws ParseException {
+                                                                 Exp exp; ParamReales params;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case coma:
+      jj_consume_token(coma);
+      exp = E0();
+      params = ParametrosRealesAux(sem.paramReales_muchos(exp, paramh));
+                                                                                                                                                                                                          {if (true) return params;}
+      break;
+    default:
+      jj_la1[13] = jj_gen;
+                                                                                                                                                                                                                             {if (true) return paramh;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp ExpresionBasica() throws ParseException {
+                                                                 Token tok;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case numEnt:
+      tok = jj_consume_token(numEnt);
+                                                                                                                               {if (true) return sem.num_ent(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case numReal:
+      tok = jj_consume_token(numReal);
+                                                                                                                                                                                                                       {if (true) return sem.num_real(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case identificador:
+      tok = jj_consume_token(identificador);
+                                                                                                                                                                                                                                                                                                                      {if (true) return sem.id(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case booleans:
+      tok = jj_consume_token(booleans);
+                                                                                                                                                                                                                                                                                                                                                                                                          {if (true) return sem.booleano(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case cadena:
+      tok = jj_consume_token(cadena);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  {if (true) return sem.cadena(sem.str(tok.image,tok.beginLine,tok.beginColumn));}
+      break;
+    case tnull:
+      jj_consume_token(tnull);
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   {if (true) return sem.nulo();}
+      break;
+    default:
+      jj_la1[14] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E0() throws ParseException {
+                                                                 Exp exp1, resul;
+    exp1 = E1();
+    resul = E0_AUX(exp1);
+                                                                                                                                                       {if (true) return resul;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E0_AUX(Exp exph) throws ParseException {
+                                                                 Exp exp1;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case suma:
+      jj_consume_token(suma);
+      exp1 = E0();
+                                                                                                                                           {if (true) return sem.mas(exph, exp1);}
+      break;
+    case resta:
+      jj_consume_token(resta);
+      exp1 = E1();
+                                                                                                                                                                                             {if (true) return sem.menos(exph, exp1);}
+      break;
+    default:
+      jj_la1[15] = jj_gen;
+                                                                                                                                                                                                                               {if (true) return exph;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E1() throws ParseException {
+                                                                 Exp exp1, resul;
+    exp1 = E2();
+    resul = E1_AUX(exp1);
+                                                                                                                                                       {if (true) return resul;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E1_AUX(Exp exph) throws ParseException {
+                                                                 String op; Exp exp2; Exp exp;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case and:
+    case or:
+      op = Op1();
+      exp2 = E2();
+      exp = E1_AUX(sem.exp(op,exph,exp2));
+                                                                                                                                                                               {if (true) return exp;}
+      break;
+    default:
+      jj_la1[16] = jj_gen;
+                                                                                                                                                                                               {if (true) return exph;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E2() throws ParseException {
+                                                                 Exp exp, resul;
+    exp = E3();
+    resul = E2_AUX(exp);
+                                                                                                                                                     {if (true) return resul;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E2_AUX(Exp exph) throws ParseException {
+                                                                 String op; Exp exp3; Exp exp;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case mayor:
+    case menor:
+    case mayorIgual:
+    case menorIgual:
+    case igual:
+    case diferente:
+      op = Op2();
+      exp3 = E3();
+      exp = E2_AUX(sem.exp(op,exph,exp3));
+                                                                                                                                                                               {if (true) return exp;}
+      break;
+    default:
+      jj_la1[17] = jj_gen;
+                                                                                                                                                                                              {if (true) return exph;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E3() throws ParseException {
+                                                                 Exp exp, resul;
+    exp = E4();
+    resul = E3_AUX(exp);
+                                                                                                                                                     {if (true) return resul;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E3_AUX(Exp exph) throws ParseException {
+                                                                                                 String op; Exp exp4;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case div:
+    case mult:
+    case porcentaje:
+      op = Op3();
+      exp4 = E4();
+                                                                                                                                                                                             {if (true) return sem.exp(op, exph, exp4);}
+      break;
+    default:
+      jj_la1[18] = jj_gen;
+                                                                                                                                                                                                                                 {if (true) return exph;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E4() throws ParseException {
+                                                                 Exp exp;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case not:
+      jj_consume_token(not);
+      exp = E4();
+                                                                                                                                 {if (true) return sem.not(exp);}
+      break;
+    case resta:
+      jj_consume_token(resta);
+      exp = E5();
+                                                                                                                                                                           {if (true) return sem.negativo(exp);}
+      break;
+    case numEnt:
+    case numReal:
+    case booleans:
+    case parAbierto:
+    case mult:
+    case tnull:
+    case cadena:
+    case identificador:
+      exp = E5();
+                                                                                                                                                                                                                  {if (true) return exp;}
+      break;
+    default:
+      jj_la1[19] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E5() throws ParseException {
+                                                                 Exp exp, resul;
+    exp = E6();
+    resul = E5_AUX(exp);
+                                                                                                                                             {if (true) return resul;}
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E5_AUX(Exp exph) throws ParseException {
+                                                                 Exp exp, resul;Token tok;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case corcheteAbierto:
+      jj_consume_token(corcheteAbierto);
+      exp = E0();
+      jj_consume_token(corcheteCerrado);
+      resul = E5_AUX(sem.indexacion(exph,exp));
+                                                                                                                                                                                                      {if (true) return resul;}
+      break;
+    case punto:
+      jj_consume_token(punto);
+      tok = jj_consume_token(identificador);
+      resul = E5_AUX(sem.acceso_registro_punto(exph, sem.str(tok.image,tok.beginLine,tok.beginColumn)));
+                                                                                                                                                                                                                                                                                                                                                    {if (true) return resul;}
+      break;
+    case flecha:
+      jj_consume_token(flecha);
+      tok = jj_consume_token(identificador);
+      resul = E5_AUX(sem.acceso_registro_flecha(exph, sem.str(tok.image,tok.beginLine,tok.beginColumn)));
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    {if (true) return resul;}
+      break;
+    default:
+      jj_la1[20] = jj_gen;
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      {if (true) return exph;}
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E6() throws ParseException {
+                                                                 Exp exp;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case mult:
+      jj_consume_token(mult);
+      exp = E6();
+                                                                                                                                                          {if (true) return sem.asterisco(exp);}
+      break;
+    case numEnt:
+    case numReal:
+    case booleans:
+    case parAbierto:
+    case tnull:
+    case cadena:
+    case identificador:
+      exp = E7();
+                                                                                                                                                                                                  {if (true) return exp;}
+      break;
+    default:
+      jj_la1[21] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public Exp E7() throws ParseException {
+                                                                 Exp exp;
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case numEnt:
+    case numReal:
+    case booleans:
+    case tnull:
+    case cadena:
+    case identificador:
+      exp = ExpresionBasica();
+                                                                                                                                                                {if (true) return exp;}
+      break;
+    case parAbierto:
+      jj_consume_token(parAbierto);
+      exp = E0();
+      jj_consume_token(parCerrado);
+                                                                                                                                                                                                                   {if (true) return exp;}
+      break;
+    default:
+      jj_la1[22] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String Op1() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case and:
+      jj_consume_token(and);
+                                                                                                                                {if (true) return "and";}
+      break;
+    case or:
+      jj_consume_token(or);
+                                                                                                                                                       {if (true) return "or";}
+      break;
+    default:
+      jj_la1[23] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String Op2() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case menor:
+      jj_consume_token(menor);
+                                                                                                                                  {if (true) return "menor";}
+      break;
+    case mayor:
+      jj_consume_token(mayor);
+                                                                                                                                                              {if (true) return "mayor";}
+      break;
+    case menorIgual:
+      jj_consume_token(menorIgual);
+                                                                                                                                                                                               {if (true) return "menorIgual";}
+      break;
+    case mayorIgual:
+      jj_consume_token(mayorIgual);
+                                                                                                                                                                                                                                     {if (true) return "mayorIgual";}
+      break;
+    case diferente:
+      jj_consume_token(diferente);
+                                                                                                                                                                                                                                                                          {if (true) return "diferente";}
+      break;
+    case igual:
+      jj_consume_token(igual);
+                                                                                                                                                                                                                                                                                                          {if (true) return "igual";}
+      break;
+    default:
+      jj_la1[24] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  final public String Op3() throws ParseException {
+    switch ((jj_ntk==-1)?jj_ntk():jj_ntk) {
+    case mult:
+      jj_consume_token(mult);
+                                                                                                                                 {if (true) return "mult";}
+      break;
+    case div:
+      jj_consume_token(div);
+                                                                                                                                                          {if (true) return "div";}
+      break;
+    case porcentaje:
+      jj_consume_token(porcentaje);
+                                                                                                                                                                                        {if (true) return "porcentaje";}
+      break;
+    default:
+      jj_la1[25] = jj_gen;
+      jj_consume_token(-1);
+      throw new ParseException();
+    }
+    throw new Error("Missing return statement in function");
+  }
+
+  /** Generated Token Manager. */
+  public ConstrASTTokenManager token_source;
+  SimpleCharStream jj_input_stream;
+  /** Current token. */
+  public Token token;
+  /** Next token. */
+  public Token jj_nt;
+  private int jj_ntk;
+  private int jj_gen;
+  final private int[] jj_la1 = new int[26];
+  static private int[] jj_la1_0;
+  static private int[] jj_la1_1;
+  static private int[] jj_la1_2;
+  static {
+      jj_la1_init_0();
+      jj_la1_init_1();
+      jj_la1_init_2();
+   }
+   private static void jj_la1_init_0() {
+      jj_la1_0 = new int[] {0x0,0x10000,0x0,0xe00,0x0,0x0,0xe00,0x10000,0x10000,0x2527000,0x0,0x2527000,0x2527000,0x0,0x7000,0x180000,0x1800000,0xfc000000,0x600000,0x2527000,0x0,0x427000,0x27000,0x1800000,0xfc000000,0x600000,};
+   }
+   private static void jj_la1_init_1() {
+      jj_la1_1 = new int[] {0x60000800,0x0,0x60000800,0xb00200,0x80,0x100,0xb00200,0x0,0x0,0x9f091408,0xc000,0x9f091408,0x80000400,0x80,0x80000400,0x0,0x0,0x0,0x1,0x80000400,0x62,0x80000400,0x80000400,0x0,0x0,0x1,};
+   }
+   private static void jj_la1_init_2() {
+      jj_la1_2 = new int[] {0x0,0x0,0x0,0x1,0x0,0x1,0x1,0x0,0x0,0x1,0x0,0x1,0x1,0x0,0x1,0x0,0x0,0x0,0x0,0x1,0x0,0x1,0x1,0x0,0x0,0x0,};
+   }
+
+  /** Constructor with InputStream. */
+  public ConstrAST(java.io.InputStream stream) {
+     this(stream, null);
+  }
+  /** Constructor with InputStream and supplied encoding */
+  public ConstrAST(java.io.InputStream stream, String encoding) {
+    try { jj_input_stream = new SimpleCharStream(stream, encoding, 1, 1); } catch(java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
+    token_source = new ConstrASTTokenManager(jj_input_stream);
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  /** Reinitialise. */
+  public void ReInit(java.io.InputStream stream) {
+     ReInit(stream, null);
+  }
+  /** Reinitialise. */
+  public void ReInit(java.io.InputStream stream, String encoding) {
+    try { jj_input_stream.ReInit(stream, encoding, 1, 1); } catch(java.io.UnsupportedEncodingException e) { throw new RuntimeException(e); }
+    token_source.ReInit(jj_input_stream);
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  /** Constructor. */
+  public ConstrAST(java.io.Reader stream) {
+    jj_input_stream = new SimpleCharStream(stream, 1, 1);
+    token_source = new ConstrASTTokenManager(jj_input_stream);
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  /** Reinitialise. */
+  public void ReInit(java.io.Reader stream) {
+    jj_input_stream.ReInit(stream, 1, 1);
+    token_source.ReInit(jj_input_stream);
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  /** Constructor with generated Token Manager. */
+  public ConstrAST(ConstrASTTokenManager tm) {
+    token_source = tm;
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  /** Reinitialise. */
+  public void ReInit(ConstrASTTokenManager tm) {
+    token_source = tm;
+    token = new Token();
+    jj_ntk = -1;
+    jj_gen = 0;
+    for (int i = 0; i < 26; i++) jj_la1[i] = -1;
+  }
+
+  private Token jj_consume_token(int kind) throws ParseException {
+    Token oldToken;
+    if ((oldToken = token).next != null) token = token.next;
+    else token = token.next = token_source.getNextToken();
+    jj_ntk = -1;
+    if (token.kind == kind) {
+      jj_gen++;
+      return token;
+    }
+    token = oldToken;
+    jj_kind = kind;
+    throw generateParseException();
+  }
+
+
+/** Get the next Token. */
+  final public Token getNextToken() {
+    if (token.next != null) token = token.next;
+    else token = token.next = token_source.getNextToken();
+    jj_ntk = -1;
+    jj_gen++;
+    return token;
+  }
+
+/** Get the specific Token. */
+  final public Token getToken(int index) {
+    Token t = token;
+    for (int i = 0; i < index; i++) {
+      if (t.next != null) t = t.next;
+      else t = t.next = token_source.getNextToken();
+    }
+    return t;
+  }
+
+  private int jj_ntk() {
+    if ((jj_nt=token.next) == null)
+      return (jj_ntk = (token.next=token_source.getNextToken()).kind);
+    else
+      return (jj_ntk = jj_nt.kind);
+  }
+
+  private java.util.List<int[]> jj_expentries = new java.util.ArrayList<int[]>();
+  private int[] jj_expentry;
+  private int jj_kind = -1;
+
+  /** Generate ParseException. */
+  public ParseException generateParseException() {
+    jj_expentries.clear();
+    boolean[] la1tokens = new boolean[65];
+    if (jj_kind >= 0) {
+      la1tokens[jj_kind] = true;
+      jj_kind = -1;
+    }
+    for (int i = 0; i < 26; i++) {
+      if (jj_la1[i] == jj_gen) {
+        for (int j = 0; j < 32; j++) {
+          if ((jj_la1_0[i] & (1<<j)) != 0) {
+            la1tokens[j] = true;
+          }
+          if ((jj_la1_1[i] & (1<<j)) != 0) {
+            la1tokens[32+j] = true;
+          }
+          if ((jj_la1_2[i] & (1<<j)) != 0) {
+            la1tokens[64+j] = true;
+          }
+        }
+      }
+    }
+    for (int i = 0; i < 65; i++) {
+      if (la1tokens[i]) {
+        jj_expentry = new int[1];
+        jj_expentry[0] = i;
+        jj_expentries.add(jj_expentry);
+      }
+    }
+    int[][] exptokseq = new int[jj_expentries.size()][];
+    for (int i = 0; i < jj_expentries.size(); i++) {
+      exptokseq[i] = jj_expentries.get(i);
+    }
+    return new ParseException(token, exptokseq, tokenImage);
+  }
+
+  /** Enable tracing. */
+  final public void enable_tracing() {
+  }
+
+  /** Disable tracing. */
+  final public void disable_tracing() {
+  }
 
 }

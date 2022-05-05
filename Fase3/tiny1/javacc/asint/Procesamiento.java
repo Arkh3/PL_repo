@@ -69,5 +69,6 @@ public interface Procesamiento {
     void procesa(Not exp);  
     void procesa(Negativo exp);  
     void procesa(Indexacion indexacion);
-    void procesa(Acceso_registro acceso_registro);
+    void procesa(Acceso_registro_punto acceso_registro);
+    void procesa(Acceso_registro_flecha acceso_registro);
 }

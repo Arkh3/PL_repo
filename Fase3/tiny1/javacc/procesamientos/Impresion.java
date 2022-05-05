@@ -35,6 +35,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 	public void procesa(Dec_tipo dec_tipo){
 		System.out.print("type ");
 		dec_tipo.type().procesa(this);
+		System.out.print(" ");
 		System.out.print(dec_tipo.id().toString());
 	}
 	public void procesa(Dec_proc dec_proc){
@@ -44,7 +45,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 		System.out.print(")");
 		dec_proc.bloque().procesa(this);
 	}
-	public void procesa(ParamsForm_muchos paramsForm_muchos){ //TODO ASEGURARSE QUE LOS PARAMETROS NOS LOS IMPRIME AL REVES
+	public void procesa(ParamsForm_muchos paramsForm_muchos){
 		paramsForm_muchos.params().procesa(this);
 		System.out.print(", ");
 		paramsForm_muchos.param().procesa(this);
@@ -94,7 +95,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 	public void procesa(TipoRegistro tipoRegistro){
 		System.out.print("record {");
 		tipoRegistro.campos().procesa(this);
-		System.out.print("}");
+		System.out.print("} ");
 	}
 	public void procesa(TipoPuntero tipoPuntero){
 		System.out.print("pointer ");
@@ -134,7 +135,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 	public void procesa(InstruccionIf instruccionIf) {
 		System.out.print("if ");
 		instruccionIf.expresion().procesa(this);
-		System.out.println("then");
+		System.out.println(" then");
 		instruccionIf.instrs().procesa(this);
 		System.out.println();
 		System.out.print("endif");
@@ -143,7 +144,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 	public void procesa(InstruccionIfElse instrs) {
 		System.out.print("if ");
 		instrs.expresion().procesa(this);
-		System.out.println("then");
+		System.out.println(" then");
 		instrs.instrs_if().procesa(this);
 		System.out.println();
 		System.out.println("else");
@@ -153,9 +154,9 @@ public class Impresion extends ProcesamientoPorDefecto {
 	}
 
 	public void procesa(InstruccionWhile instrs) {
-		System.out.print("while");
+		System.out.print("while ");
 		instrs.expresion().procesa(this);
-		System.out.println("do");
+		System.out.println(" do");
 		instrs.instrs().procesa(this);
 		System.out.println();
 		System.out.print("endwhile");
@@ -236,83 +237,83 @@ public class Impresion extends ProcesamientoPorDefecto {
 
 	public void procesa(Mas exp) {
 		imprime_arg(exp.arg0(), 1);
-		System.out.print("+");
+		System.out.print(" + ");
 		imprime_arg(exp.arg1(), 0);
 	}
 
 	public void procesa(Menos exp) {
 		imprime_arg(exp.arg0(), 1);
-		System.out.print("-");
+		System.out.print(" - ");
 		imprime_arg(exp.arg1(), 1);
 
 	}
 
 	public void procesa(And exp) {
 		imprime_arg(exp.arg0(), 1);
-		System.out.print("and");
+		System.out.print(" and ");
 		imprime_arg(exp.arg1(), 2);
 	}
 
 	public void procesa(Or exp) {
 		imprime_arg(exp.arg0(), 1);
-		System.out.print("or");
+		System.out.print(" or ");
 		imprime_arg(exp.arg1(), 2);
 	}
 
 	public void procesa(Menor exp) {
 
 		imprime_arg(exp.arg0(), 2);
-		System.out.print("<");
+		System.out.print(" < ");
 		imprime_arg(exp.arg1(), 3);
 	}
 
 	public void procesa(Mayor exp) {
 		imprime_arg(exp.arg0(), 2);
-		System.out.print(">");
+		System.out.print(" > ");
 		imprime_arg(exp.arg1(), 3);
 	}
 
 	public void procesa(Menor_igual exp) {
 		imprime_arg(exp.arg0(), 2);
-		System.out.print("<=");
+		System.out.print(" <= ");
 		imprime_arg(exp.arg1(), 3);
 	}
 
 	public void procesa(Mayor_igual exp) {
 		imprime_arg(exp.arg0(), 2);
-		System.out.print(">=");
+		System.out.print(" >= ");
 		imprime_arg(exp.arg1(), 3);
 	}
 
 	public void procesa(Diferente exp) {
 		imprime_arg(exp.arg0(), 2);
-		System.out.print("!=");
+		System.out.print(" != ");
 		imprime_arg(exp.arg1(), 3);
 
 	}
 
 	public void procesa(Igual exp) {
 		imprime_arg(exp.arg0(), 2);
-		System.out.print("==");
+		System.out.print(" == ");
 		imprime_arg(exp.arg1(), 3);
 	}
 
 	public void procesa(Mult exp) {
 		imprime_arg(exp.arg0(), 4);
-		System.out.print("*");
+		System.out.print(" * ");
 		imprime_arg(exp.arg1(), 4);
 	}
 
 	public void procesa(Div exp) {
 		imprime_arg(exp.arg0(), 4);
-		System.out.print("/");
+		System.out.print(" / ");
 		imprime_arg(exp.arg1(), 4);
 
 	}
 
 	public void procesa(Porcentaje exp) {
 		imprime_arg(exp.arg0(), 4);
-		System.out.print("%");
+		System.out.print(" % ");
 		imprime_arg(exp.arg0(), 4);
 	}
 
@@ -332,13 +333,18 @@ public class Impresion extends ProcesamientoPorDefecto {
 		imprime_arg(indexacion.arg1(), 0);
 		System.out.print("]");
 	}
-
-	public void procesa(Acceso_registro acceso_registro) {
-		// TODO HACER ESTO CON LAS FLECHAS Y LOS PUNTOS
+	
+	public void procesa(Acceso_registro_punto acceso_registro) {
+		imprime_arg(acceso_registro.arg0(), 5);
+		System.out.print(".");
+		System.out.print(acceso_registro.str().toString());
+	}
+	
+    public void procesa(Acceso_registro_flecha acceso_registro) {
 		imprime_arg(acceso_registro.arg0(), 5);
 		System.out.print("->");
 		System.out.print(acceso_registro.str().toString());
-	}
+    }
 
 	public void procesa(Asterisco asterisco) {
 		System.out.print("* ");

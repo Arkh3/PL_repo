@@ -68,5 +68,6 @@ public class ProcesamientoPorDefecto implements Procesamiento {
 	public void procesa(Not exp){}
 	public void procesa(Negativo exp){}
 	public void procesa(Indexacion indexacion){}
-	public void procesa(Acceso_registro acceso_registro){}
+	public void procesa(Acceso_registro_punto acceso_registro) {}
+    public void procesa(Acceso_registro_flecha acceso_registro) {}
 }
