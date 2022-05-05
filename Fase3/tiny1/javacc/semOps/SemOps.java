@@ -5,10 +5,6 @@ import asint.AnalizadorSintacticoTiny;
 public class SemOps extends AnalizadorSintacticoTiny {
 	public Exp exp(String op, Exp arg0, Exp arg1) {
 		switch (op) {
-		case "suma":
-			return suma(arg0, arg1);
-		case "resta":
-			return resta(arg0, arg1);
 		case "and":
 			return and(arg0, arg1);
 		case "or":
@@ -29,6 +25,8 @@ public class SemOps extends AnalizadorSintacticoTiny {
 			return mult(arg0, arg1);
 		case "div":
 			return div(arg0, arg1);
+		case "porcentaje":
+			return porcentaje(arg0, arg1);
 		}
 		throw new UnsupportedOperationException("exp " + op);
 	}

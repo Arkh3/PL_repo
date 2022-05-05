@@ -4,8 +4,6 @@
  */
 package asint;
 
-import asint.AnalizadorSintacticoTiny.TipoPuntero;
-
 public class AnalizadorSintacticoTiny {
 
 	public static class StringLocalizado {
