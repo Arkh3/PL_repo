@@ -1,0 +1,241 @@
+package c_ast;
+
+import java_cup.runtime.*;
+import alex.AnalizadorLexicoTiny;
+import alex.UnidadLexica;
+import errors.GestionErroresTiny;
+import semOps.SemOps;
+import asint.AnalizadorSintacticoTiny.*;
+
+scan with {: return getScanner().next_token(); :};
+action code {:
+   private SemOps sem = new SemOps();
+:};
+parser code {: 
+   private GestionErroresTiny errores;
+   public void syntax_error(Symbol unidadLexica) {
+     errores.errorSintactico((UnidadLexica)unidadLexica);
+   }
+:};
+init with {: 
+   errores = new GestionErroresTiny();
+   AnalizadorLexicoTiny alex = (AnalizadorLexicoTiny)getScanner();
+   alex.fijaGestionErrores(errores);
+:};
+
+
+terminal NL, OF, TYPE, PROC, SEPARADOR, PUNTOCOMA, VAR, 
+			PAR_ABIERTO, PAR_CERRADO, COMA, AMPERSAND, LLAVE_ABIERTA, 
+			LLAVE_CERRADA, INT, REAL, BOOL, STRING, ARRAY, RECORD, POINTER, 
+			CORCHETE_ABIERTO, CORCHETE_CERRADO, ASIGNACION, MAS, MENOS, NOT, 
+			AND, OR, MENOR, MAYOR,  MENOR_IGUAL, 
+			MAYOR_IGUAL, DIFERENTE, IGUAL, MULT, DIV, NULL, IF, ELSE, WHILE, 
+			ENDIF, ENDWHILE, DO, THEN, READ, WRITE, NEW, DELETE, CALL, 
+			PORCENTAJE, PUNTO, FLECHA;
+terminal StringLocalizado BOOLEAN, IDENTIFICADOR, NUM_ENT, NUM_REAL, CADENA;
+
+non terminal Prog SAux, S;
+non terminal Decs SecDec, Declaraciones;
+non terminal Dec Declaracion, DeclaracionVar, DeclaracionTipo, DeclaracionProc;
+non terminal ParamsForm ParametrosFormalesAux, ParametrosFormales;
+non terminal Param Parametro;
+non terminal Bloque Bloque;
+non terminal Tipo Tipo, Array, Registro, Puntero;            
+non terminal Campos Campos;              
+non terminal Campo Campo;                
+non terminal Instrs SecInstr, SecInstr2;             
+non terminal Instr Instruccion, InstruccionCall, InstruccionAsignacion, InstruccionIf, InstruccionWhile, InstruccionDelete, InstruccionRead, InstruccionWrite, InstruccionNew; 
+non terminal ParamReales ParametrosReales, ParametrosRealesAux;
+non terminal Exp ExpresionBasica, E0, E1, E2, E3, E4, E5, E6, E7;
+non terminal String Op1, Op2, Op3;
+
+SAux ::= S: prog
+	{: RESULT = prog; :};
+S ::= SecDec: decs SecInstr: instrs
+	{: RESULT = sem.prog(decs,instrs); :};
+SecDec ::= Declaraciones: decs SEPARADOR
+	{: RESULT = decs; :};
+SecDec ::= {: RESULT = sem.decs_vacia(); :};
+Declaraciones ::= Declaraciones: decs PUNTOCOMA Declaracion: dec
+	{: RESULT = sem.decs_muchas(decs, dec); :};
+Declaraciones ::= Declaracion: dec
+	{: RESULT = sem.decs_una(dec); :};
+Declaracion ::= DeclaracionVar: dec
+	{: RESULT = dec; :};
+Declaracion ::= DeclaracionTipo: dec
+	{: RESULT = dec; :};
+Declaracion ::= DeclaracionProc: dec
+	{: RESULT = dec; :};
+DeclaracionVar ::= VAR Tipo: tipo IDENTIFICADOR: id
+	{: RESULT = sem.dec_var(tipo, id); :};
+DeclaracionTipo ::= TYPE Tipo: tipo IDENTIFICADOR: id
+	{: RESULT = sem.dec_tipo(tipo, id); :};
+DeclaracionProc ::= PROC IDENTIFICADOR:id PAR_ABIERTO ParametrosFormales:params PAR_CERRADO Bloque:bloque
+	{: RESULT = sem.dec_proc(id, params, bloque); :};
+ParametrosFormales ::= ParametrosFormalesAux:params
+	{: RESULT = params; :};
+ParametrosFormales ::= {: RESULT = sem.paramsForm_vacio(); :};
+ParametrosFormalesAux ::= ParametrosFormalesAux:params COMA Parametro:param
+	{: RESULT = sem.paramsForm_muchos(params, param); :};
+ParametrosFormalesAux ::= Parametro:param
+	{: RESULT = sem.paramsForm_uno(param); :};
+Parametro ::= Tipo:tipo IDENTIFICADOR:id
+	{: RESULT = sem.param_sin_amp(tipo, id); :};
+Parametro ::= Tipo:tipo AMPERSAND IDENTIFICADOR:id
+	{: RESULT = sem.param_con_amp(tipo, id); :};
+Bloque ::=  LLAVE_ABIERTA SecDec:decs SecInstr:instrs LLAVE_CERRADA
+	{: RESULT = sem.bloque(decs, instrs); :};
+Tipo ::= INT
+	{: RESULT = sem.tipoInt(); :};
+Tipo ::= REAL
+	{: RESULT = sem.tipoReal(); :};
+Tipo ::= BOOL
+	{: RESULT = sem.tipoBool(); :};
+Tipo ::= STRING
+	{: RESULT = sem.tipoString(); :};
+Tipo ::= IDENTIFICADOR:id
+	{: RESULT = sem.tipoId(id); :};
+Tipo ::= Array:array
+	{: RESULT = array; :};
+Tipo ::= Registro:registro
+	{: RESULT = registro; :};
+Tipo ::= Puntero:puntero
+	{: RESULT = puntero; :};
+Array ::= ARRAY CORCHETE_ABIERTO NUM_ENT:tam CORCHETE_CERRADO OF Tipo:tipo
+	{: RESULT = sem.tipoArray(tam, tipo); :};
+Registro ::= RECORD LLAVE_ABIERTA Campos:campos LLAVE_CERRADA
+	{: RESULT = sem.tipoRegistro(campos); :};
+Campos ::= Campos:campos PUNTOCOMA Campo:campo
+	{: RESULT = sem.campos_muchos(campos, campo); :};
+Campos ::= Campo:campo
+	{: RESULT = sem.campos_uno(campo); :};
+Campo ::= Tipo:tipo IDENTIFICADOR:id
+	{: RESULT = sem.campo(tipo, id); :};
+Puntero ::= POINTER Tipo:tipo
+	{: RESULT = sem.tipoPuntero(tipo); :};
+SecInstr ::= SecInstr:instrs PUNTOCOMA Instruccion:instr
+	{: RESULT = sem.instr_muchas(instrs, instr); :};
+SecInstr ::= Instruccion:instr
+	{: RESULT = sem.instr_una(instr); :};
+Instruccion ::= InstruccionAsignacion:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionIf:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionWhile:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionRead:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionWrite:instr
+	{: RESULT = instr; :};
+Instruccion ::= NL
+	{: RESULT = sem.instruccionNL(); :};
+Instruccion ::= InstruccionNew:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionDelete:instr
+	{: RESULT = instr; :};
+Instruccion ::= InstruccionCall:instr
+	{: RESULT = instr; :};
+Instruccion ::= Bloque:bloque
+	{: RESULT = sem.instruccionBloque(bloque); :};
+InstruccionAsignacion ::= E0:arg0 ASIGNACION E0:arg1
+	{: RESULT = sem.instruccionAsig(arg0, arg1); :};
+InstruccionIf ::= IF E0:exp THEN SecInstr2:instrs ENDIF
+	{: RESULT = sem.instruccionIf(exp, instrs); :};
+InstruccionIf ::= IF E0:exp THEN SecInstr2:instrs_if ELSE SecInstr2:instrs_else ENDIF
+	{: RESULT = sem.instruccionIfElse(exp, instrs_if, instrs_else); :};
+SecInstr2 ::= SecInstr:instrs
+	{: RESULT = instrs; :};
+SecInstr2 ::= {: RESULT = sem.instr_vacia(); :};
+InstruccionWhile ::= WHILE E0:exp DO SecInstr2:instrs ENDWHILE
+	{: RESULT = sem.instruccionWhile(exp, instrs); :};
+InstruccionRead ::= READ E0:exp
+	{: RESULT = sem.instruccionRead(exp); :};
+InstruccionWrite ::= WRITE E0:exp
+	{: RESULT = sem.instruccionWrite(exp); :};
+InstruccionNew ::= NEW E0:exp
+	{: RESULT = sem.instruccionNew(exp); :};
+InstruccionDelete ::= DELETE E0:exp
+	{: RESULT = sem.instruccionDelete(exp); :};
+InstruccionCall ::= CALL IDENTIFICADOR:id PAR_ABIERTO ParametrosReales:params PAR_CERRADO
+	{: RESULT = sem.instruccionCall(id, params); :};
+ParametrosReales ::= ParametrosRealesAux: arg
+    {: RESULT = arg; :};
+ParametrosReales ::= {: RESULT = sem.paramReales_vacios(); :};
+ParametrosRealesAux ::= ParametrosRealesAux:args COMA E0:arg
+    {: RESULT = sem.paramReales_muchos(arg,args); :};
+ParametrosRealesAux ::= E0: arg
+    {: RESULT = sem.paramReales_uno(arg); :};
+ExpresionBasica ::= NUM_ENT : arg 
+    {: RESULT = sem.num_ent(arg); :};
+ExpresionBasica ::= NUM_REAL : arg
+    {: RESULT = sem.num_real(arg); :};    
+ExpresionBasica ::= IDENTIFICADOR: arg
+    {: RESULT = sem.id(arg); :};
+ExpresionBasica ::= BOOLEAN: arg
+    {: RESULT = sem.booleano(arg); :};
+ExpresionBasica ::= CADENA: arg
+    {: RESULT = sem.cadena(arg); :};
+ExpresionBasica ::= NULL
+    {: RESULT = sem.nulo(); :};
+E0 ::= E1: arg0 MAS E0: arg1 
+    {: RESULT = sem.mas(arg0, arg1); :};
+E0 ::= E1: arg0 MENOS E1: arg1
+    {: RESULT = sem.menos(arg0, arg1); :};
+E0 ::= E1: exp
+    {: RESULT = exp; :};
+E1 ::= E1: arg0 Op1:op1 E2: arg1
+    {: RESULT = sem.exp(op1, arg0, arg1); :};
+E1 ::= E2: arg0
+    {: RESULT = arg0; :};
+E2 ::= E2: arg0 Op2:op2 E3: arg1
+    {: RESULT = sem.exp(op2, arg0, arg1); :};
+E2 ::= E3: arg0
+    {: RESULT = arg0; :};
+E3 ::= E4: arg0 Op3:op3 E4: arg1 
+    {: RESULT = sem.exp(op3, arg0, arg1); :};
+E3 ::= E4 : arg0
+    {: RESULT = arg0; :};
+E4 ::= NOT E4: arg0 
+    {: RESULT = sem.not(arg0); :};
+E4 ::=  MENOS E5: arg0 
+    {: RESULT = sem.negativo(arg0); :};
+E4 ::=  E5 : arg0
+    {: RESULT = arg0; :};
+E5 ::= E5: arg0 CORCHETE_ABIERTO E0: arg1 CORCHETE_CERRADO
+    {: RESULT = sem.indexacion(arg0, arg1); :};
+E5 ::= E5: arg0 PUNTO IDENTIFICADOR: id
+    {: RESULT = sem.acceso_registro_punto(arg0, id); :};
+E5 ::= E5: arg0 FLECHA IDENTIFICADOR: id
+    {: RESULT = sem.acceso_registro_flecha(arg0, id); :};
+E5 ::= E6: arg0
+    {: RESULT = arg0; :};
+E6 ::= MULT E6: arg0
+    {: RESULT = sem.asterisco(arg0); :};
+E6 ::= E7: arg0
+    {: RESULT = arg0; :};
+E7 ::= ExpresionBasica: exp
+    {: RESULT = exp; :};
+E7 ::= PAR_ABIERTO E0: arg0 PAR_CERRADO
+    {: RESULT = arg0; :};
+Op1 ::= AND 
+    {: RESULT = "and"; :};    
+Op1 ::= OR 
+    {: RESULT = "or"; :};
+Op2 ::= MENOR 
+    {: RESULT = "menor"; :};
+Op2 ::= MAYOR 
+    {: RESULT = "mayor"; :};
+Op2 ::= MENOR_IGUAL 
+    {: RESULT = "menor_igual"; :};
+Op2 ::= MAYOR_IGUAL 
+    {: RESULT = "mayor_igual"; :};
+Op2 ::= DIFERENTE 
+    {: RESULT = "diferente"; :};
+Op2 ::= IGUAL
+    {: RESULT = "igual"; :};
+Op3 ::= MULT
+    {: RESULT = "mult"; :};
+Op3 ::= DIV
+    {: RESULT = "div"; :};
+Op3 ::= PORCENTAJE 
+    {: RESULT = "porcentaje"; :};
