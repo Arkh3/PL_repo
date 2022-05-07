@@ -45,7 +45,7 @@ public class Impresion extends ProcesamientoPorDefecto {
 		System.out.print(")");
 		dec_proc.bloque().procesa(this);
 	}
-	public void procesa(ParamsForm_muchos paramsForm_muchos){ //TODO ASEGURARSE QUE LOS PARAMETROS NOS LOS IMPRIME AL REVES
+	public void procesa(ParamsForm_muchos paramsForm_muchos){
 		paramsForm_muchos.params().procesa(this);
 		System.out.print(", ");
 		paramsForm_muchos.param().procesa(this);

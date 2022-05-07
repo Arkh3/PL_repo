@@ -38,10 +38,6 @@ public class AnalizadorSintacticoTiny {
 		}
 	}
 
-	/*
-	 * TODO: CAMBIAR TANTO EN LA MEMORIA COMO EN LOS PROCESAMIENTOS COMO AQUI: PROG
-	 * DEBERIA HABER 2 PROG_SIN_DECS Y PROG_CON_DECS
-	 */
 	public static class Prog {
 		private Decs decs;
 		private Instrs instrs;
