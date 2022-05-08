@@ -1,0 +1,7 @@
+int calculo;
+bool condicion;
+real calculo_real
+&&
+calculo = (--7 + 25) / (6 * 5 - 3);
+calculo_real = -+6.5 / (2 * 7.5e-19);
+condicion = not(true and (true or false))

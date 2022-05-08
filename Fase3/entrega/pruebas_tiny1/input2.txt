@@ -1,0 +1,11 @@
+type pointer tNodo tArbol;
+proc lee_nombres(tListaNombres & nombres) {
+var int i
+&&
+read nombres.cont;
+while i < nombres.nombres do
+read nombres.nombres[i]
+endwhile
+}
+&&
+call lee_nombres(aux)
